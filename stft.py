@@ -35,8 +35,7 @@ class STFT(nn.Module):
                 self.real_kernels, self.imag_kernels = self._get_stft_kernels()
             real_kernels, imag_kernels = self.real_kernels, self.imag_kernels
 
-        sample = sample.unsqueeze(1)
-        sample = sample.unsqueeze(1)
+        sample = sample.reshape(sample.shape[0], 1, 1, -1)
 
         magn = F.conv2d(sample, real_kernels, stride=self.hop_length)
         # phase = F.conv2d(sample, self.imag_kernels, stride=self.hop_length)

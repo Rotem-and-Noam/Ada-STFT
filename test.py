@@ -4,7 +4,9 @@ import torch
 import numpy as np
 import torchaudio
 
+from DataManager_1D import GTZANDataset
 from model import Classifier
+from train import genres
 
 
 def calculate_accuracy(model, dataloader, device, criterion, class_number=10):
@@ -36,6 +38,7 @@ def calculate_accuracy(model, dataloader, device, criterion, class_number=10):
 
 def test(classifier, criterion, device, batch_size=8, num_workers=2):
     test_set = torchaudio.datasets.GTZAN(r"C:\Users\elata\code\MusicGenreClassifier\datasets\genres", subset="test")
+    test_set = GTZANDataset(torch_dataset=test_set, labels_list=genres, vector_equlizer='k sec')
     test_data = torch.utils.data.DataLoader(test_set,
                                              batch_size=batch_size,
                                              shuffle=False,
