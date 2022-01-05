@@ -1,10 +1,13 @@
 {
   "test_name": "test_no_learn_stft",
+  "resume": 1,
+  "ckpt_test_name": "test_no_learn_stft",
   "tensorboard_dir": "tensorboard",
   "data_dir": "dataset",
-  "batch_size":4,
-  "num_workers":2,
-  "epoch_num":2,
-  "learning_rate":4e-2,
-  "gamma":0.9997
+  "ckpt_dir": "check_points",
+  "batch_size": 4,
+  "num_workers": 2,
+  "epoch_num": 200,
+  "learning_rate": 4e-2,
+  "gamma": 0.9997
 }

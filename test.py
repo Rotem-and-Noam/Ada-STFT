@@ -6,44 +6,15 @@ import torchaudio
 
 from DataManager_1D import GTZANDataset
 from model import Classifier
+from get_components import *
 
 
-def calculate_accuracy_and_loss(model, dataloader, device, criterion, class_number=10):
-    model.eval()
-    correct_total = 0
-    samples_total = 0
-    loss_total = 0
-    confusion_matrix = np.zeros([class_number, class_number], int)
-
-    # iterate on the test set and calculate accuracy and loss per batch
-    with torch.no_grad():
-        for images, labels in dataloader:
-            images = images.to(device)
-            labels = labels.to(device)
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss_total += loss.item() * labels.size(0)
-            _, predictions = torch.max(outputs.data, 1)
-            samples_total += labels.size(0)
-            correct_total += (predictions == labels).sum().item()
-            for i, l in enumerate(labels):
-                confusion_matrix[l.item(), predictions[i].item()] += 1
-
-    # calculating mean accuracy and mean loss of the test set
-    model_accuracy = correct_total / samples_total
-    loss_total = loss_total / samples_total
-
-    return model_accuracy, confusion_matrix, loss_total
 
 
 def test(classifier, criterion, device, batch_size, num_workers, genres, data_dir):
 
-    test_set = torchaudio.datasets.GTZAN(data_dir, subset="test", download=True)
-    test_set = GTZANDataset(torch_dataset=test_set, labels_list=genres, vector_equlizer='k sec')
-    test_data = torch.utils.data.DataLoader(test_set,
-                                             batch_size=batch_size,
-                                             shuffle=False,
-                                             num_workers=num_workers)
+    test_data = get_dataloader(mode='test', data_dir=data_dir, genres=genres,
+                                batch_size=batch_size, num_workers=num_workers)
     test_accuracy, confusion_matrix, test_loss = calculate_accuracy_and_loss(classifier,
                                                                              test_data,
                                                                              device,
