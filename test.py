@@ -36,9 +36,9 @@ def calculate_accuracy_and_loss(model, dataloader, device, criterion, class_numb
     return model_accuracy, confusion_matrix, loss_total
 
 
-def test(classifier, criterion, device, batch_size, num_workers, genres):
+def test(classifier, criterion, device, batch_size, num_workers, genres, data_dir):
 
-    test_set = torchaudio.datasets.GTZAN("datasets", subset="test", download=True)
+    test_set = torchaudio.datasets.GTZAN(data_dir, subset="test", download=True)
     test_set = GTZANDataset(torch_dataset=test_set, labels_list=genres, vector_equlizer='k sec')
     test_data = torch.utils.data.DataLoader(test_set,
                                              batch_size=batch_size,

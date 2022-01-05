@@ -15,15 +15,15 @@ from torch.utils.tensorboard import SummaryWriter
 genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
 
 
-def train(classifier, criterion, device, batch_size, num_workers, epoch_num, learning_rate, gamma, writer, **kwargs):
-    train_set = torchaudio.datasets.GTZAN("datasets", subset="training", download=True)
+def train(classifier, criterion, device, batch_size, num_workers, epoch_num, learning_rate, gamma, writer, data_dir, **kwargs):
+    train_set = torchaudio.datasets.GTZAN(data_dir, subset="training", download=True)
     train_set = GTZANDataset(torch_dataset=train_set, labels_list=genres, vector_equlizer='k sec')
     train_data = torch.utils.data.DataLoader(train_set,
                                              batch_size=batch_size,
                                              shuffle=True,
                                              num_workers=num_workers,
                                              drop_last=True)
-    val_set = torchaudio.datasets.GTZAN("datasets", subset="validation", download=True)
+    val_set = torchaudio.datasets.GTZAN(data_dir, subset="validation", download=True)
     val_set = GTZANDataset(torch_dataset=val_set, labels_list=genres, vector_equlizer='k sec')
     val_data = torch.utils.data.DataLoader(val_set,
                                            batch_size=batch_size,

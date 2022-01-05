@@ -1,6 +1,7 @@
 {
   "test_name": "test_no_learn_stft",
   "tensorboard_dir": "tensorboard",
+  "data_dir": "dataset",
   "batch_size":4,
   "num_workers":2,
   "epoch_num":2,
