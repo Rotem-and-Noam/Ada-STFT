@@ -8,22 +8,22 @@ from tqdm import tqdm
 
 from DataManager_1D import GTZANDataset
 from model import Classifier
-from test import calculate_accuracy
+from test import calculate_accuracy_and_loss
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 
 genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
 
 
-def train(classifier, criterion, device, batch_size, num_workers, epoch_num, learning_rate, gamma, writer):
-    train_set = torchaudio.datasets.GTZAN(r"C:\Users\elata\code\MusicGenreClassifier\datasets", subset="training")
+def train(classifier, criterion, device, batch_size, num_workers, epoch_num, learning_rate, gamma, writer, **kwargs):
+    train_set = torchaudio.datasets.GTZAN("datasets", subset="training", download=True)
     train_set = GTZANDataset(torch_dataset=train_set, labels_list=genres, vector_equlizer='k sec')
     train_data = torch.utils.data.DataLoader(train_set,
                                              batch_size=batch_size,
                                              shuffle=True,
                                              num_workers=num_workers,
                                              drop_last=True)
-    val_set = torchaudio.datasets.GTZAN(r"C:\Users\elata\code\MusicGenreClassifier\datasets", subset="validation")
+    val_set = torchaudio.datasets.GTZAN("datasets", subset="validation", download=True)
     val_set = GTZANDataset(torch_dataset=val_set, labels_list=genres, vector_equlizer='k sec')
     val_data = torch.utils.data.DataLoader(val_set,
                                            batch_size=batch_size,
@@ -36,9 +36,9 @@ def train(classifier, criterion, device, batch_size, num_workers, epoch_num, lea
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
 
     for epoch in range(epoch_num):
-        train_loss = train_epoch(classifier, train_data, criterion, optimizer, device, length//batch_size)
-        val_accuracy, confusion_matrix, val_loss = calculate_accuracy(model=classifier, dataloader=val_data,
-                                                                      device=device, criterion=criterion)
+        train_loss = train_epoch(classifier, train_data, criterion, optimizer, scheduler, device, length//batch_size)
+        val_accuracy, confusion_matrix, val_loss = calculate_accuracy_and_loss(model=classifier, dataloader=val_data,
+                                                                               device=device, criterion=criterion)
 
         print(f"epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
               f"train loss: {train_loss:.4f}",
@@ -62,7 +62,8 @@ def show_confusion_matrix(confusion_matrix, show=True):
         plt.show()
     return fig
 
-def train_epoch(classifier, train_data, criterion, optimizer, device, length):
+
+def train_epoch(classifier, train_data, criterion, optimizer, scheduler, device, length):
     classifier.train()
     train_epoch_loss = 0
     samples_total = 0

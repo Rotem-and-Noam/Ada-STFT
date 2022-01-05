@@ -6,10 +6,9 @@ import torchaudio
 
 from DataManager_1D import GTZANDataset
 from model import Classifier
-from train import genres
 
 
-def calculate_accuracy(model, dataloader, device, criterion, class_number=10):
+def calculate_accuracy_and_loss(model, dataloader, device, criterion, class_number=10):
     model.eval()
     correct_total = 0
     samples_total = 0
@@ -37,19 +36,19 @@ def calculate_accuracy(model, dataloader, device, criterion, class_number=10):
     return model_accuracy, confusion_matrix, loss_total
 
 
-def test(classifier, criterion, device, batch_size=8, num_workers=2):
+def test(classifier, criterion, device, batch_size, num_workers, genres):
 
-    test_set = torchaudio.datasets.GTZAN(r"C:\Users\elata\code\MusicGenreClassifier\datasets\genres", subset="test")
+    test_set = torchaudio.datasets.GTZAN("datasets", subset="test", download=True)
     test_set = GTZANDataset(torch_dataset=test_set, labels_list=genres, vector_equlizer='k sec')
     test_data = torch.utils.data.DataLoader(test_set,
                                              batch_size=batch_size,
                                              shuffle=False,
                                              num_workers=num_workers)
-    test_accuracy, confusion_matrix, test_loss = calculate_accuracy(classifier,
-                                                                    test_data,
-                                                                    device,
-                                                                    criterion,
-                                                                    class_number=10)
+    test_accuracy, confusion_matrix, test_loss = calculate_accuracy_and_loss(classifier,
+                                                                             test_data,
+                                                                             device,
+                                                                             criterion,
+                                                                             class_number=10)
     print(f"test accuracy: {100 * test_accuracy:.4f}%",
           f"test loss: {test_loss:.4f}")
 
