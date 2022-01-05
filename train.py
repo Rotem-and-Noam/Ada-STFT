@@ -1,3 +1,4 @@
+import json
 import os
 
 import numpy as np
@@ -8,26 +9,27 @@ from tqdm import tqdm
 from DataManager_1D import GTZANDataset
 from model import Classifier
 from test import calculate_accuracy
-
-
+import matplotlib.pyplot as plt
+from torch.utils.tensorboard import SummaryWriter
 
 genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
 
 
-def train(classifier, criterion, device, batch_size=4, num_workers=2, epoch_num=2, learning_rate=4e-2, gamma=0.9997):
+def train(classifier, criterion, device, batch_size, num_workers, epoch_num, learning_rate, gamma, writer):
     train_set = torchaudio.datasets.GTZAN(r"C:\Users\elata\code\MusicGenreClassifier\datasets", subset="training")
     train_set = GTZANDataset(torch_dataset=train_set, labels_list=genres, vector_equlizer='k sec')
     train_data = torch.utils.data.DataLoader(train_set,
-                                batch_size=batch_size,
-                                shuffle=True,
-                                num_workers=num_workers)
+                                             batch_size=batch_size,
+                                             shuffle=True,
+                                             num_workers=num_workers,
+                                             drop_last=True)
     val_set = torchaudio.datasets.GTZAN(r"C:\Users\elata\code\MusicGenreClassifier\datasets", subset="validation")
     val_set = GTZANDataset(torch_dataset=val_set, labels_list=genres, vector_equlizer='k sec')
     val_data = torch.utils.data.DataLoader(val_set,
-                                             batch_size=batch_size,
-                                             shuffle=False,
-                                             num_workers=num_workers)
-
+                                           batch_size=batch_size,
+                                           shuffle=False,
+                                           num_workers=num_workers,
+                                           drop_last=True)
     length = len(train_set)
 
     optimizer = torch.optim.AdamW(classifier.parameters(), learning_rate)
@@ -36,13 +38,29 @@ def train(classifier, criterion, device, batch_size=4, num_workers=2, epoch_num=
     for epoch in range(epoch_num):
         train_loss = train_epoch(classifier, train_data, criterion, optimizer, device, length//batch_size)
         val_accuracy, confusion_matrix, val_loss = calculate_accuracy(model=classifier, dataloader=val_data,
-                           device=device, criterion=criterion)
+                                                                      device=device, criterion=criterion)
+
         print(f"epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
               f"train loss: {train_loss:.4f}",
               f"val loss: {val_loss:.4f}")
 
-        scheduler.step()
+        writer.add_figure('confusion matrix', show_confusion_matrix(confusion_matrix))
+        writer.add_scalar('Loss/train', train_loss, epoch)
+        writer.add_scalar('Loss/val', val_loss, epoch)
+        writer.add_scalar('Accuracy/val', val_accuracy, epoch)
 
+
+
+def show_confusion_matrix(confusion_matrix, show=True):
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    ax.matshow(confusion_matrix, aspect='auto', vmin=0, vmax=1000, cmap=plt.get_cmap('Blues'))
+    plt.ylabel('Actual Category')
+    plt.yticks(range(10), genres)
+    plt.xlabel('Predicted Category')
+    plt.xticks(range(10), genres)
+    if show:
+        plt.show()
+    return fig
 
 def train_epoch(classifier, train_data, criterion, optimizer, device, length):
     classifier.train()
@@ -68,12 +86,22 @@ def train_epoch(classifier, train_data, criterion, optimizer, device, length):
 
     # calculating mean train loss for epoch
     train_loss = train_epoch_loss / samples_total
+    scheduler.step()
+
     return train_loss
 
 
 if __name__ == "__main__":
+
+    with open("options.json", 'r') as fp:
+        options = json.load(fp)
+
+    tensorboard_path = os.path.join(options['tensorboard_dir'], options['test_name'])
+    writer = SummaryWriter(log_dir=tensorboard_path)
+    options['writer'] = writer
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     classifier = Classifier()
     criterion = torch.nn.CrossEntropyLoss()
-    train(classifier, criterion, device)
+    train(classifier, criterion, device, **options)
     torch.save(classifier.state_dict(), path=os.path.join(".", "saved_models", "classifier.torch"))
