@@ -85,7 +85,7 @@ class STFT(nn.Module):
 
     def apply_mel(self, stft, num_mels=128):
         mel_basis = librosa.filters.mel(self.sample_rate, n_fft=self.nfft, n_mels=num_mels)
-        return torch.from_numpy(mel_basis).unsqueeze(dim=0) @ stft
+        return torch.from_numpy(mel_basis).unsqueeze(dim=0).to(stft.device) @ stft
 
     def apply_log(self, stft, log_base=10):
         return torch.log10(1 + log_base * stft)

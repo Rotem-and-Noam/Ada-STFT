@@ -21,6 +21,7 @@ class Train:
         self.data_length = len(self.train_data)
         self.writer = writer
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
         self.model = get_model(self.device, ckpt)
         self.optimizer, self.scheduler = get_optimizer(self.model, learning_rate, gamma, ckpt)
         self.criterion = torch.nn.CrossEntropyLoss()
@@ -28,6 +29,7 @@ class Train:
         self.start_epoch = ckpt.start_epoch
         self.class_number = len(self.genres)
         self.ckpt = ckpt
+        print(f"Starting training on device {str(self.device)} for {str(self.epoch_num)} epochs")
 
     def train(self):
         for epoch in range(self.start_epoch, self.epoch_num):
@@ -37,7 +39,8 @@ class Train:
 
             print(f"epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
                   f"train loss: {train_loss:.4f}",
-                  f"val loss: {val_loss:.4f}")
+                  f"val loss: {val_loss:.4f}",
+                  f"learning rate: {self.optimizer.param_groups[0]['lr']:.4f}")
 
             # send documentation to tensorboard
             self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
@@ -50,7 +53,7 @@ class Train:
         self.writer.add_scalar('Loss/val', val_loss, epoch)
         self.writer.add_scalar('Accuracy/val', val_accuracy, epoch)
 
-    def show_confusion_matrix(self, confusion_matrix, show=True):
+    def show_confusion_matrix(self, confusion_matrix, show=False):
         if show:
             plt.close()
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))

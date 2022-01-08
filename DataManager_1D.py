@@ -6,7 +6,8 @@ import random
 
 
 class GTZANDataset(Dataset):
-    def __init__(self,torch_dataset, labels_list,vector_equlizer='padding', output_length=675808):
+    def __init__(self,torch_dataset, labels_list,vector_equlizer='padding', output_length=675808, transforms=None):
+        self.transforms = transforms
         x = []
         y = []
         for item in torch_dataset:
@@ -20,7 +21,7 @@ class GTZANDataset(Dataset):
                 x.append(waveform[:,:output_length])
                 y.append(labels_list.index(label))
             elif vector_equlizer == 'k sec':
-                k = 1
+                k = 2
                 sec_k = sr * k
                 resize_data_factor = 1
                 r_list = createRandomSortedList(resize_data_factor, (0 * sr), (26 * sr))
@@ -38,6 +39,8 @@ class GTZANDataset(Dataset):
         self.y = torch.tensor(y)
 
     def __getitem__(self, index):
+        if self.transforms is not None:
+            return self.transforms(self.x[index]), self.y[index]
         return self.x[index], self.y[index]
 
     def __len__(self):
