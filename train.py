@@ -12,23 +12,31 @@ from get_components import *
 class Train:
 
     def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma, writer,
-                 data_dir, ckpt, **kwargs):
+                 data_dir, ckpt, ckpt_interval, load_resnet_weight_path=None,
+                 learn_window=0, learn_kernels=0, **kwargs):
         self.genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
         self.train_data = get_dataloader(mode='train', data_dir=data_dir, genres=self.genres,
                                          batch_size=batch_size, num_workers=num_workers)
         self.val_data = get_dataloader(mode='val', data_dir=data_dir, genres=self.genres,
                                        batch_size=batch_size, num_workers=num_workers)
+        self.batch_size = batch_size
         self.data_length = len(self.train_data)
         self.writer = writer
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-        self.model = get_model(self.device, ckpt)
+        self.model = get_model(self.device, ckpt, load_resnet_weight_path)
         self.optimizer, self.scheduler = get_optimizer(self.model, learning_rate, gamma, ckpt)
         self.criterion = torch.nn.CrossEntropyLoss()
         self.epoch_num = epoch_num
         self.start_epoch = ckpt.start_epoch
         self.class_number = len(self.genres)
         self.ckpt = ckpt
+        self.ckpt_interval = ckpt_interval
+        if learn_window:
+            self.model.stft.learn_window()
+        if learn_kernels:
+            self.model.stft.learn_kernels()
+        self.model.stft.print_learnable_params()
+        print(f"Learnable parameters {self.count_parameters(self.model)}")
         print(f"Starting training on device {str(self.device)} for {str(self.epoch_num)} epochs")
 
     def train(self):
@@ -38,32 +46,50 @@ class Train:
             val_accuracy, confusion_matrix, val_loss = self.calculate_accuracy_and_loss()
 
             print(f"epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
-                  f"train loss: {train_loss:.4f}",
-                  f"val loss: {val_loss:.4f}",
-                  f"learning rate: {self.optimizer.param_groups[0]['lr']:.4f}")
+                  f"train loss: {train_loss:.5f}",
+                  f"val loss: {val_loss:.5f}",
+                  f"learning rate: {self.optimizer.param_groups[0]['lr']:.6f}")
 
             # send documentation to tensorboard
             self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
             # save check points
-            self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch)
+            if epoch % self.ckpt_interval == self.ckpt_interval - 1:
+                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch)
+
+    @staticmethod
+    def count_parameters(model):
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     def tensorboard_logging(self, confusion_matrix, train_loss, val_loss, val_accuracy, epoch):
-        self.writer.add_figure('confusion matrix', self.show_confusion_matrix(confusion_matrix))
         self.writer.add_scalar('Loss/train', train_loss, epoch)
         self.writer.add_scalar('Loss/val', val_loss, epoch)
         self.writer.add_scalar('Accuracy/val', val_accuracy, epoch)
+        self.writer.add_scalar('Window Change', self.model.stft.calc_window_change().item(), epoch)
+        self.writer.add_scalar('Kernel Change', self.model.stft.calc_kernels_change().item(), epoch)
+        if epoch % self.ckpt_interval == 0:
+            self.writer.add_figure('confusion matrix', self.show_confusion_matrix(confusion_matrix), epoch)
+            self.writer.add_figure('Window',
+                                   self.show_window(self.model.stft.win_cof.detach().clone().squeeze(0).cpu().numpy()),
+                                   epoch)
 
     def show_confusion_matrix(self, confusion_matrix, show=False):
         if show:
             plt.close()
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-        ax.matshow(confusion_matrix, aspect='auto', vmin=0, vmax=1000, cmap=plt.get_cmap('Blues'))
+        ax.matshow(confusion_matrix, aspect='auto', vmin=0,
+                   vmax=len(self.val_data)*self.batch_size/self.class_number, cmap=plt.get_cmap('Blues'))
         plt.ylabel('Actual Category')
         plt.yticks(range(self.class_number), self.genres)
         plt.xlabel('Predicted Category')
         plt.xticks(range(self.class_number), self.genres)
         if show:
             plt.show()
+        return fig
+
+    def show_window(self, window):
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        ax.stem(window)
+        ax.set_title("Window Coefficients")
         return fig
 
     def train_epoch(self):
@@ -127,6 +153,8 @@ if __name__ == "__main__":
     # loading training options and hyper-parameters
     with open("options.json", 'r') as fp:
         options = json.load(fp)
+
+    print(f"Starting test: {options['test_name']}")
 
     # tensorboard initialising
     tensorboard_path = os.path.join(options['tensorboard_dir'], options['test_name'])

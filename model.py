@@ -6,7 +6,7 @@ from resnet_dropout import *
 from stft import STFT
 
 class Classifier(nn.Module):
-    def __init__(self, num_classes=10, resnet=resnet101, nfft=1024, hop_length=512,
+    def __init__(self, num_classes=10, resnet=resnet18, nfft=1024, hop_length=512,
                  window="hanning", sample_rate=22050, num_mels=128,
                  log_base=10, parts=128, length=1024):
         super(Classifier, self).__init__()
@@ -15,6 +15,10 @@ class Classifier(nn.Module):
         self.stft = STFT(nfft=nfft, hop_length=hop_length, window=window,
                          sample_rate=sample_rate, num_mels=num_mels, log_base=log_base)
         self.resnet = resnet(num_classes=num_classes)
+
+    def load_resnet_weights(self, path):
+        self.resnet.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
+        print(f"Loaded resnet weights from: {path}")
 
     def forward(self, x):
         x = self.stft(x)

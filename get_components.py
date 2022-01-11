@@ -2,16 +2,19 @@ import torchaudio
 import torch
 from DataManager_1D import GTZANDataset
 from model import Classifier
-import torchaudio_augmentations as taa
+try:
+    import torchaudio_augmentations as taa
 
-sr = 22050
+    sr = 22050
 
-augmentations = taa.Compose([
-    taa.RandomApply([taa.Noise(min_snr=0.001, max_snr=0.005)], p=0.3),
-    taa.RandomApply([taa.Gain()], p=0.2),
-    taa.RandomApply([taa.HighLowPass(sample_rate=sr)], p=0.2), # this augmentation will always be applied in this aumgentation chain!
-    taa.RandomApply([taa.Delay(sample_rate=sr)], p=0.5),
-])
+    augmentations = taa.Compose([
+        taa.RandomApply([taa.Noise(min_snr=0.001, max_snr=0.01)], p=0.3),
+        taa.RandomApply([taa.Gain()], p=0.2),
+        # taa.RandomApply([taa.HighLowPass(sample_rate=sr)], p=0.2), # this augmentation will always be applied in this aumgentation chain!
+        taa.RandomApply([taa.Delay(sample_rate=sr)], p=0.2),
+    ])
+except ModuleNotFoundError:
+    augmentations = None
 
 def get_dataloader(mode, data_dir, genres, batch_size, num_workers):
     if mode == 'train':
@@ -42,10 +45,13 @@ def get_dataloader(mode, data_dir, genres, batch_size, num_workers):
         return test_data
 
 
-def get_model(device, ckpt):
+def get_model(device, ckpt, load_resnet_path=None):
     model = Classifier().to(device)
     if ckpt.is_ckpt():
         model = ckpt.load_model(model)
+    elif load_resnet_path is not None:
+        model.load_resnet_weights(load_resnet_path)
+        model.to(device)
     return model
 
 

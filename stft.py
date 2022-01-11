@@ -67,9 +67,12 @@ class STFT(nn.Module):
         else:
             win_cof = np.ones((1, nfft), dtype=np.float64)
 
-        win_cof = nn.Parameter(torch.from_numpy(win_cof), requires_grad=True)
+        self.initial_window = torch.from_numpy(win_cof)
+        self.initial_kernel = torch.from_numpy(kernels)
 
-        kernels = nn.Parameter(torch.from_numpy(kernels), requires_grad=False)
+        win_cof = nn.Parameter(torch.clone(self.initial_window), requires_grad=False)
+
+        kernels = nn.Parameter(torch.clone(self.initial_kernel), requires_grad=False)
 
         return win_cof, kernels
 
@@ -90,19 +93,47 @@ class STFT(nn.Module):
     def apply_log(self, stft, log_base=10):
         return torch.log10(1 + log_base * stft)
 
+    def learn_window(self):
+        self.win_cof.requires_grad = True
+
+    def learn_kernels(self):
+        self.kernels.requires_grad = True
+
+    def print_learnable_params(self):
+        if self.win_cof.requires_grad:
+            print(f"Learning window")
+        if self.kernels.requires_grad:
+            print(f"Learning kernels")
+
+    def calc_window_change(self):
+        return torch.nn.functional.mse_loss(self.win_cof.detach(), self.initial_window.to(self.win_cof.device))
+
+    def calc_kernels_change(self):
+        return torch.norm(self.kernels.detach() - self.initial_kernel.to(self.win_cof.device))
+
 
 
 if __name__ == "__main__":
-    path = r"C:\Users\elata\code\MusicGenreClassifier\datasets\genres\blues\blues.00029.wav"
+    # sr = 22050
+    # import torchaudio_augmentations as taa
+    #
+    # augmentations = taa.Compose([
+    #     # taa.RandomApply([taa.Noise(min_snr=0.001, max_snr=0.005)], p=1),
+    #     # taa.RandomApply([taa.Gain()], p=1),
+    #     # taa.RandomApply([taa.HighLowPass(sample_rate=sr)], p=1), # this augmentation will always be applied in this aumgentation chain!
+    #     taa.RandomApply([taa.Delay(sample_rate=sr)], p=1),
+    # ])
+    path = r"/home/tiras/adastft/dataset/genres/blues/blues.00029.wav"
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     tensor, sr = librosa.load(path, 22050)
     # tensor = tensor - np.mean(tensor)
-    tensor = tensor[np.newaxis, :]
-    model = STFT(window="hanning")
-    stft = model.forward(torch.from_numpy(tensor)).T
+    tensor = augmentations(torch.from_numpy(tensor[np.newaxis, :])).to(device)
+    model = STFT(window="hanning").to(device)
+    stft = model.forward(tensor).T.detach().to("cpu")
     # loss = torch.nn.MSELoss()(stft, 0*stft)
     # loss.backward()
     # print(model.win_cof.grad)
 
-    # plt.imshow(stft.squeeze().detach().numpy())
-    # plt.show()
+    plt.imshow(stft.squeeze().detach().numpy())
+    plt.show()
     pass

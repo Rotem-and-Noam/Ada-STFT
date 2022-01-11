@@ -1,13 +1,16 @@
 {
-  "test_name": "test_no_learn_stft",
+  "test_name": "test_learn_window_2",
   "resume": 1,
-  "ckpt_test_name": "test_no_learn_stft",
+  "ckpt_test_name": "test_learn_window_2",
+  "ckpt_interval": 20,
   "tensorboard_dir": "./tensorboard",
   "data_dir": "./dataset",
-  "ckpt_dir": "./checkpoints2",
+  "ckpt_dir": "./checkpoints_learn_window_2",
+  "learn_window": 1,
+  "learn_kernels": 0,
   "batch_size": 16,
   "num_workers": 2,
-  "epoch_num": 10000,
-  "learning_rate": 4e-2,
-  "gamma": 0.9997
+  "epoch_num": 2000,
+  "learning_rate": 2e-3,
+  "gamma": 0.9995
 }

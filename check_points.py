@@ -49,11 +49,5 @@ class LoadCkpt:
             'scheduler': scheduler
         }
 
-        # change last ckpt
-        if epoch != 0:
-            old_name = f"ckpt_{epoch - 1}.pt"
-            src = os.path.join(self._dir, self._last_file)
-            dst = os.path.join(self._dir, old_name)
-            os.rename(src, dst)
-
+        torch.save(ckpt_dict, os.path.join(self._dir, f"ckpt_{epoch}.pt"))
         torch.save(ckpt_dict, os.path.join(self._dir, self._last_file))
