@@ -1,7 +1,6 @@
 import torch
 import os
 
-
 class LoadCkpt:
 
     def __init__(self, ckpt_dir):
@@ -11,6 +10,7 @@ class LoadCkpt:
         self.start_epoch = 0
         if not(self._ckpt_dict is None):
             self.start_epoch = self._load_start_epoch()
+            print(f"loaded check points, strating from epoch: {self.start_epoch}")
 
     def _load_ckpt(self):
         path = os.path.join(self._dir, self._last_file)
@@ -41,12 +41,16 @@ class LoadCkpt:
     def load_scheduler(self):
         return self._ckpt_dict['scheduler']
 
-    def save_ckpt(self, model, optimizer, scheduler, epoch):
+    def load_options(self):
+        return self._ckpt_dict['options']
+
+    def save_ckpt(self, model, optimizer, scheduler, epoch, options):
         ckpt_dict = {
             'epoch': epoch,
             'state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
-            'scheduler': scheduler
+            'scheduler': scheduler,
+            'options': options
         }
 
         torch.save(ckpt_dict, os.path.join(self._dir, f"ckpt_{epoch}.pt"))

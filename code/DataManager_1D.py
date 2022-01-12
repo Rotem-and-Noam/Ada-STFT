@@ -4,9 +4,8 @@ import torch
 import torch.nn.functional as F
 import random
 
-
 class GTZANDataset(Dataset):
-    def __init__(self,torch_dataset, labels_list,vector_equlizer='padding',
+    def __init__(self, torch_dataset, labels_list, vector_equlizer='padding',
                  mode="sample", parts=12, sample_rate=22050,
                  output_length=675804, transforms=None):
         self.mode = mode
@@ -20,13 +19,13 @@ class GTZANDataset(Dataset):
         y = []
         for item in torch_dataset:
             waveform, sr, label = item
-            if vector_equlizer =='padding':
+            if vector_equlizer == 'padding':
                 waveform = waveform
                 pad = output_length - waveform.size(1)
                 x.append(F.pad(input=waveform, pad=(0, pad, 0, 0), mode='constant', value=0))
                 y.append(labels_list.index(label))
             elif vector_equlizer == 'cut min':
-                x.append(waveform[:,:output_length])
+                x.append(waveform[:, :output_length])
                 y.append(labels_list.index(label))
             elif vector_equlizer == 'k sec':
                 k = k
@@ -47,13 +46,19 @@ class GTZANDataset(Dataset):
         self.y = torch.tensor(y)
 
     def __getitem__(self, index):
-        if self.transforms is not None:
-            return self.transforms(self.x[index]), self.y[index]
-        if self.mode == "sample":
+
+        if self.mode == "sample":  # sample one sample part
             start = random.randrange(self.output_length - int(self.part_length*self.sample_rate))
-            return self.x[index][:, start:start+int(self.part_length*self.sample_rate)], self.y[index]
-        if self.mode == "split":
-            return self.x[index], self.y[index]
+            x, y = self.x[index][:, start:start+int(self.part_length*self.sample_rate)], self.y[index]
+        elif self.mode == "split":  # return a regular sample
+            x, y = self.x[index], self.y[index]
+        else:
+            raise Exception("mode parameter is not one of following: sample, split")
+
+        if self.transforms is not None:
+            x, y = self.transforms(x), y
+
+        return x, y
 
     def __len__(self):
         return self.x.shape[0]

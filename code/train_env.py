@@ -7,19 +7,20 @@ import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from check_points import *
 from get_components import *
-from test import calculate_accuracy_and_loss
 
 
-class Train:
+class Env:
 
     def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma, writer,
-                 data_dir, ckpt, ckpt_interval, load_resnet_weight_path=None,
+                 data_dir, ckpt, ckpt_interval, options, load_resnet_weight_path=None,
                  split_parts=1, learn_window=0, learn_kernels=0, **kwargs):
         self.genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
         self.train_data = get_dataloader(mode='train', data_dir=data_dir, genres=self.genres,
                                          batch_size=batch_size, num_workers=num_workers, parts=split_parts)
         self.val_data = get_dataloader(mode='val', data_dir=data_dir, genres=self.genres,
                                        batch_size=batch_size, num_workers=num_workers, parts=split_parts)
+        self.test_data = get_dataloader(mode='test', data_dir=data_dir, genres=self.genres,
+                                        batch_size=batch_size, num_workers=num_workers, parts=split_parts)
         self.batch_size = batch_size
         self.data_length = len(self.train_data)
         self.writer = writer
@@ -32,6 +33,7 @@ class Train:
         self.epoch_num = epoch_num
         self.start_epoch = ckpt.start_epoch
         self.class_number = len(self.genres)
+        self.options = options
         self.ckpt = ckpt
         self.ckpt_interval = ckpt_interval
         if learn_window:
@@ -57,7 +59,7 @@ class Train:
             self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
             # save check points
             if epoch % self.ckpt_interval == self.ckpt_interval - 1:
-                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch)
+                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options)
 
     @staticmethod
     def count_parameters(model):
@@ -123,13 +125,48 @@ class Train:
 
         return train_loss
 
-    def calculate_accuracy_and_loss(self):
-        return calculate_accuracy_and_loss(model=self.model,
-                                           val_data=self.val_data,
-                                           device=self.device,
-                                           criterion=self.criterion,
-                                           class_number=self.class_number,
-                                           parts=self.split_parts)
+    def calculate_accuracy_and_loss(self, data_type='val'):
+        self.model.eval()
+        correct_total = 0
+        samples_total = 0
+        loss_total = 0
+        confusion_matrix = np.zeros([self.class_number, self.class_number], int)
+
+        if data_type == 'val':
+            data = self.val_data
+        elif data_type == 'test':
+            data = self.test_data
+        elif data_type == 'train':
+            data = self.train_data
+        else:
+            raise Exception("data_type parameter is not one of following: val, test, train")
+
+        # iterate on the test or validation set and calculate accuracy and loss per batch
+        with torch.no_grad():
+            for images, labels in data:
+                images = images.to(self.device)
+                labels_expanded = labels.to(self.device).repeat(self.split_parts, 1).T.reshape(-1)
+                outputs = self.model(images)
+                loss = self.criterion(outputs, labels_expanded)
+                loss_total += loss.item() * len(labels)
+                _, predictions = torch.max(outputs.data, 1)
+                predictions = predictions.reshape(-1, self.split_parts)
+                predictions, _ = torch.mode(predictions, 1)
+                samples_total += labels.size(0)
+                correct_total += (predictions == labels).sum().item()
+                for i, l in enumerate(labels):
+                    confusion_matrix[l.item(), predictions[i].item()] += 1
+
+        # calculating mean accuracy and mean loss of the test set
+        model_accuracy = correct_total / samples_total
+        loss_total = loss_total / samples_total
+
+        return model_accuracy, confusion_matrix, loss_total
+
+    def test(self):
+        test_accuracy, confusion_matrix, test_loss = self.calculate_accuracy_and_loss(data_type='test')
+        print(f"test accuracy: {100 * test_accuracy:.4f}%",
+              f"test loss: {test_loss:.4f}")
 
 
 if __name__ == "__main__":
@@ -151,7 +188,7 @@ if __name__ == "__main__":
     options["ckpt"] = LoadCkpt(ckpt_dir)
 
     # train
-    train = Train(**options)
-    train.train()
+    train = Env(options=options, **options)
+    Env.calculate_accuracy_and_loss('val')
 
     print("done training! Deep Learning Rules!")

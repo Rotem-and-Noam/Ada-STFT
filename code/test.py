@@ -43,7 +43,7 @@ def calculate_accuracy_and_loss(model, val_data, device, criterion, class_number
 def test(classifier, criterion, device, batch_size, num_workers, genres, data_dir, parts):
 
     test_data = get_dataloader(mode='test', data_dir=data_dir, genres=genres,
-                                batch_size=batch_size, num_workers=num_workers, parts=parts)
+                                batch_size=batch_size, num_workers=num_workers)
     test_accuracy, confusion_matrix, test_loss = calculate_accuracy_and_loss(classifier,
                                                                              test_data,
                                                                              device,
@@ -61,4 +61,4 @@ if __name__ == "__main__":
     classifier = Classifier()
     criterion = torch.nn.CrossEntropyLoss()
     # classifier.load_state_dict(torch.load(path=os.path.join(".", "saved_models", "classifier.torch")))
-    test(classifier, criterion, device, batch_size=16, num_workers=2, genres=genres, data_dir="./dataset", parts=12)
+    test(classifier, criterion, device, batch_size=16, num_workers=2, genres=genres, data_dir="../dataset", parts=12)
