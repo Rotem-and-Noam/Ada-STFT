@@ -16,10 +16,10 @@ try:
 except ModuleNotFoundError:
     augmentations = None
 
-def get_dataloader(mode, data_dir, genres, batch_size, num_workers):
+def get_dataloader(mode, data_dir, genres, batch_size, num_workers, parts):
     if mode == 'train':
         train_set = torchaudio.datasets.GTZAN(data_dir, subset="training", download=True)
-        train_set = GTZANDataset(torch_dataset=train_set, labels_list=genres, vector_equlizer='padding', transforms=augmentations)
+        train_set = GTZANDataset(torch_dataset=train_set, labels_list=genres, vector_equlizer='padding', parts=parts)
         train_data = torch.utils.data.DataLoader(train_set,
                                                  batch_size=batch_size,
                                                  shuffle=True,
@@ -28,16 +28,15 @@ def get_dataloader(mode, data_dir, genres, batch_size, num_workers):
         return train_data
     elif mode == 'val':
         val_set = torchaudio.datasets.GTZAN(data_dir, subset="validation", download=True)
-        val_set = GTZANDataset(torch_dataset=val_set, labels_list=genres, vector_equlizer='padding')
+        val_set = GTZANDataset(torch_dataset=val_set, labels_list=genres, vector_equlizer='padding', mode="split", parts=parts)
         val_data = torch.utils.data.DataLoader(val_set,
                                                batch_size=batch_size,
                                                shuffle=False,
-                                               num_workers=0,
-                                               drop_last=True)
+                                               num_workers=0)
         return val_data
     elif mode == 'test':
         test_set = torchaudio.datasets.GTZAN(data_dir, subset="testing", download=True)
-        test_set = GTZANDataset(torch_dataset=test_set, labels_list=genres, vector_equlizer='padding')
+        test_set = GTZANDataset(torch_dataset=test_set, labels_list=genres, vector_equlizer='padding', mode="split", parts=parts)
         test_data = torch.utils.data.DataLoader(test_set,
                                                 batch_size=batch_size,
                                                 shuffle=False,

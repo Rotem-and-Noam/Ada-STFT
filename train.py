@@ -7,25 +7,28 @@ import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from check_points import *
 from get_components import *
+from test import calculate_accuracy_and_loss
 
 
 class Train:
 
     def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma, writer,
                  data_dir, ckpt, ckpt_interval, load_resnet_weight_path=None,
-                 learn_window=0, learn_kernels=0, **kwargs):
+                 split_parts=1, learn_window=0, learn_kernels=0, **kwargs):
         self.genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
         self.train_data = get_dataloader(mode='train', data_dir=data_dir, genres=self.genres,
-                                         batch_size=batch_size, num_workers=num_workers)
+                                         batch_size=batch_size, num_workers=num_workers, parts=split_parts)
         self.val_data = get_dataloader(mode='val', data_dir=data_dir, genres=self.genres,
-                                       batch_size=batch_size, num_workers=num_workers)
+                                       batch_size=batch_size, num_workers=num_workers, parts=split_parts)
         self.batch_size = batch_size
         self.data_length = len(self.train_data)
         self.writer = writer
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cpu')
         self.model = get_model(self.device, ckpt, load_resnet_weight_path)
         self.optimizer, self.scheduler = get_optimizer(self.model, learning_rate, gamma, ckpt)
         self.criterion = torch.nn.CrossEntropyLoss()
+        self.split_parts = split_parts
         self.epoch_num = epoch_num
         self.start_epoch = ckpt.start_epoch
         self.class_number = len(self.genres)
@@ -121,31 +124,12 @@ class Train:
         return train_loss
 
     def calculate_accuracy_and_loss(self):
-        self.model.eval()
-        correct_total = 0
-        samples_total = 0
-        loss_total = 0
-        confusion_matrix = np.zeros([self.class_number, self.class_number], int)
-
-        # iterate on the test set and calculate accuracy and loss per batch
-        with torch.no_grad():
-            for images, labels in self.val_data:
-                images = images.to(self.device)
-                labels = labels.to(self.device)
-                outputs = self.model(images)
-                loss = self.criterion(outputs, labels)
-                loss_total += loss.item() * labels.size(0)
-                _, predictions = torch.max(outputs.data, 1)
-                samples_total += labels.size(0)
-                correct_total += (predictions == labels).sum().item()
-                for i, l in enumerate(labels):
-                    confusion_matrix[l.item(), predictions[i].item()] += 1
-
-        # calculating mean accuracy and mean loss of the test set
-        model_accuracy = correct_total / samples_total
-        loss_total = loss_total / samples_total
-
-        return model_accuracy, confusion_matrix, loss_total
+        return calculate_accuracy_and_loss(model=self.model,
+                                           val_data=self.val_data,
+                                           device=self.device,
+                                           criterion=self.criterion,
+                                           class_number=self.class_number,
+                                           parts=self.split_parts)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from stft import STFT
 class Classifier(nn.Module):
     def __init__(self, num_classes=10, resnet=resnet18, nfft=1024, hop_length=512,
                  window="hanning", sample_rate=22050, num_mels=128,
-                 log_base=10, parts=128, length=1024):
+                 log_base=10, parts=12, length=1024):
         super(Classifier, self).__init__()
         self.length = length
         self.split_parts = parts
@@ -21,6 +21,8 @@ class Classifier(nn.Module):
         print(f"Loaded resnet weights from: {path}")
 
     def forward(self, x):
+        if not self.training:
+            x = x.reshape(x.shape[0] * self.split_parts, -1)
         x = self.stft(x)
         x = self.resize_array(x)
         # x = self.split_into_batch(x)

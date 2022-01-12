@@ -6,8 +6,16 @@ import random
 
 
 class GTZANDataset(Dataset):
-    def __init__(self,torch_dataset, labels_list,vector_equlizer='padding', output_length=675808, transforms=None):
+    def __init__(self,torch_dataset, labels_list,vector_equlizer='padding',
+                 mode="sample", parts=12, sample_rate=22050,
+                 output_length=675804, transforms=None):
+        self.mode = mode
+        self.parts = parts
+        self.part_length = 30 / parts
+        self.output_length = output_length
+        self.sample_rate = sample_rate
         self.transforms = transforms
+        self.generator = None
         x = []
         y = []
         for item in torch_dataset:
@@ -21,7 +29,7 @@ class GTZANDataset(Dataset):
                 x.append(waveform[:,:output_length])
                 y.append(labels_list.index(label))
             elif vector_equlizer == 'k sec':
-                k = 2
+                k = k
                 sec_k = sr * k
                 resize_data_factor = 1
                 r_list = createRandomSortedList(resize_data_factor, (0 * sr), (26 * sr))
@@ -41,10 +49,20 @@ class GTZANDataset(Dataset):
     def __getitem__(self, index):
         if self.transforms is not None:
             return self.transforms(self.x[index]), self.y[index]
-        return self.x[index], self.y[index]
+        if self.mode == "sample":
+            start = random.randrange(self.output_length - int(self.part_length*self.sample_rate))
+            return self.x[index][:, start:start+int(self.part_length*self.sample_rate)], self.y[index]
+        if self.mode == "split":
+            return self.x[index], self.y[index]
 
     def __len__(self):
         return self.x.shape[0]
+
+    def sample_k(self):
+        pass
+
+    def split_to_k(self):
+        pass
 
 
 def createRandomSortedList(num, start=1, end=100):
