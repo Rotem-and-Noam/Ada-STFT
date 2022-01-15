@@ -1,22 +1,22 @@
-import json
-import os
 import numpy as np
-import torch
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from check_points import *
 from get_components import *
+from options_parser import get_options
 
 
 class Env:
 
     def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma, writer,
                  data_dir, ckpt, ckpt_interval, options, load_resnet_weight_path=None,
-                 split_parts=1, learn_window=0, learn_kernels=0, **kwargs):
+                 split_parts=1, learn_window=0, learn_kernels=0, cpu=False, augmentation=False, three_windows=0,
+                 **kwargs):
         self.genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
         self.train_data = get_dataloader(mode='train', data_dir=data_dir, genres=self.genres,
-                                         batch_size=batch_size, num_workers=num_workers, parts=split_parts)
+                                         batch_size=batch_size, num_workers=num_workers, parts=split_parts,
+                                         augmentation=augmentation)
         self.val_data = get_dataloader(mode='val', data_dir=data_dir, genres=self.genres,
                                        batch_size=batch_size, num_workers=num_workers, parts=split_parts)
         self.test_data = get_dataloader(mode='test', data_dir=data_dir, genres=self.genres,
@@ -24,9 +24,11 @@ class Env:
         self.batch_size = batch_size
         self.data_length = len(self.train_data)
         self.writer = writer
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.device = torch.device('cpu')
-        self.model = get_model(self.device, ckpt, load_resnet_weight_path)
+        if not cpu:
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        else:
+            self.device = torch.device('cpu')
+        self.model = get_model(self.device, ckpt, three_windows, load_resnet_weight_path)
         self.optimizer, self.scheduler = get_optimizer(self.model, learning_rate, gamma, ckpt)
         self.criterion = torch.nn.CrossEntropyLoss()
         self.split_parts = split_parts
@@ -82,7 +84,7 @@ class Env:
             plt.close()
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         ax.matshow(confusion_matrix, aspect='auto', vmin=0,
-                   vmax=len(self.val_data)*self.batch_size/self.class_number, cmap=plt.get_cmap('Blues'))
+                   vmax=len(self.val_data)/self.class_number, cmap=plt.get_cmap('Blues'))
         plt.ylabel('Actual Category')
         plt.yticks(range(self.class_number), self.genres)
         plt.xlabel('Predicted Category')
@@ -144,18 +146,18 @@ class Env:
         # iterate on the test or validation set and calculate accuracy and loss per batch
         with torch.no_grad():
             for images, labels in data:
-                images = images.to(self.device)
-                labels_expanded = labels.to(self.device).repeat(self.split_parts, 1).T.reshape(-1)
-                outputs = self.model(images)
-                loss = self.criterion(outputs, labels_expanded)
+                image = images.to(self.device)
+                labels = labels.to(self.device)
+                image_splited = image.reshape(image.shape[0] * self.split_parts, 1, -1)
+                label_splited = labels.repeat(self.split_parts, 1).T.reshape(-1)
+                outputs = self.model(image_splited)
+                loss = self.criterion(outputs, label_splited)
                 loss_total += loss.item() * len(labels)
                 _, predictions = torch.max(outputs.data, 1)
-                predictions = predictions.reshape(-1, self.split_parts)
-                predictions, _ = torch.mode(predictions, 1)
+                prediction, _ = torch.mode(predictions)
                 samples_total += labels.size(0)
-                correct_total += (predictions == labels).sum().item()
-                for i, l in enumerate(labels):
-                    confusion_matrix[l.item(), predictions[i].item()] += 1
+                correct_total += (prediction == labels).sum().item()
+                confusion_matrix[labels.item(), prediction.item()] += 1
 
         # calculating mean accuracy and mean loss of the test set
         model_accuracy = correct_total / samples_total
@@ -172,23 +174,24 @@ class Env:
 if __name__ == "__main__":
 
     # loading training options and hyper-parameters
-    with open("options.json", 'r') as fp:
-        options = json.load(fp)
+    parser = get_options()
+    options = vars(parser.parse_args())
 
     print(f"Starting test: {options['test_name']}")
-
-    # tensorboard initialising
-    tensorboard_path = os.path.join(options['tensorboard_dir'], options['test_name'])
-    options['writer'] = SummaryWriter(log_dir=tensorboard_path)
 
     # check if need to load check points
     ckpt_dir = os.path.join(options["ckpt_dir"], options['test_name'])
     options["ckpt_dir"] = ckpt_dir
     os.makedirs(ckpt_dir, exist_ok=True)
-    options["ckpt"] = LoadCkpt(ckpt_dir)
+    ckpt = LoadCkpt(ckpt_dir)
+
+    # tensorboard initialising
+    tensorboard_path = os.path.join(options['tensorboard_dir'], options['test_name'])
+    writer = SummaryWriter(log_dir=tensorboard_path)
 
     # train
-    train = Env(options=options, **options)
-    Env.calculate_accuracy_and_loss('val')
+    env = Env(writer=writer, ckpt=ckpt, options=options, **options)
+    # env.calculate_accuracy_and_loss('val')
+    env.train()
 
     print("done training! Deep Learning Rules!")

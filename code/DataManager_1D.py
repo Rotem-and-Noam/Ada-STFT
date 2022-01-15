@@ -7,13 +7,16 @@ import random
 class GTZANDataset(Dataset):
     def __init__(self, torch_dataset, labels_list, vector_equlizer='padding',
                  mode="sample", parts=12, sample_rate=22050,
-                 output_length=675804, transforms=None):
+                 output_length=675804, augmentation=False):
         self.mode = mode
         self.parts = parts
-        self.part_length = 30 / parts
         self.output_length = output_length
+        assert output_length % parts == 0
+        self.part_length = output_length // parts
         self.sample_rate = sample_rate
-        self.transforms = transforms
+        self.transforms = None
+        if augmentation:
+            self.transforms = get_augmentations()
         self.generator = None
         x = []
         y = []
@@ -46,18 +49,15 @@ class GTZANDataset(Dataset):
         self.y = torch.tensor(y)
 
     def __getitem__(self, index):
-
         if self.mode == "sample":  # sample one sample part
-            start = random.randrange(self.output_length - int(self.part_length*self.sample_rate))
-            x, y = self.x[index][:, start:start+int(self.part_length*self.sample_rate)], self.y[index]
+            start = random.randrange(self.output_length - self.part_length - 1)
+            x, y = self.x[index][:, start:start + int(self.part_length)], self.y[index]
         elif self.mode == "split":  # return a regular sample
             x, y = self.x[index], self.y[index]
         else:
             raise Exception("mode parameter is not one of following: sample, split")
-
         if self.transforms is not None:
             x, y = self.transforms(x), y
-
         return x, y
 
     def __len__(self):
@@ -86,8 +86,8 @@ def createRandomSortedList(num, start=1, end=100):
     return arr
 
 
-
 def get_dataloader(hparams):
+
     trainset,validset,testset = load_gtza_from_torch()
 
     trainset = GTZANDataset(torch_dataset=trainset, labels_list=hparams.genres,vector_equlizer='k sec')
@@ -100,12 +100,24 @@ def get_dataloader(hparams):
 
     return train_loader, valid_loader, test_loader
 
+
 def load_gtza_from_torch():
 
     trainset = torchaudio.datasets.GTZAN(root="./datasets", download=True,subset="training")
     validset = torchaudio.datasets.GTZAN(root="./datasets", download=True, subset="validation")
     testset = torchaudio.datasets.GTZAN(root="./datasets", download=True, subset="testing")
     return trainset, validset, testset
+
+def get_augmentations():
+    import torchaudio_augmentations as taa
+    sr = 22050
+    augmentations = taa.Compose([
+        taa.RandomApply([taa.Noise(min_snr=0.001, max_snr=0.01)], p=0.3),
+        taa.RandomApply([taa.Gain()], p=0.2),
+        # taa.RandomApply([taa.HighLowPass(sample_rate=sr)], p=0.2), # this augmentation will always be applied in this aumgentation chain!
+        taa.RandomApply([taa.Delay(sample_rate=sr)], p=0.2),
+    ])
+    return augmentations
 
 if __name__ == '__main__':
     load_gtza_from_torch()
