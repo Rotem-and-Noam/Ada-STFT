@@ -27,5 +27,6 @@ def get_options():
     parser.add_argument('--cpu', type=int, default=options['cpu'])
     parser.add_argument('--augmentation', type=int, default=options['augmentation'])
     parser.add_argument('--three_widows', type=int, default=options['three_widows'])
+    parser.add_argument('--optimizer_class', type=str, default=options['optimizer_class'])
 
     return parser

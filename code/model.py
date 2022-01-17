@@ -15,6 +15,10 @@ class Classifier(nn.Module):
         self.split_parts = parts
         self.stft = STFT(nfft=nfft, hop_length=hop_length, window=window,
                          sample_rate=sample_rate, num_mels=num_mels, log_base=log_base)
+        self.stft1 = STFT(nfft=nfft, hop_length=hop_length, window=window,
+                         sample_rate=sample_rate, num_mels=num_mels, log_base=log_base)
+        self.stft2 = STFT(nfft=nfft, hop_length=hop_length, window=window,
+                         sample_rate=sample_rate, num_mels=num_mels, log_base=log_base)
         self.resnet = resnet(num_classes=num_classes)
         self.three_windows = three_windows
 
@@ -32,11 +36,11 @@ class Classifier(nn.Module):
         else:
             R = self.stft(x)
             R = self.resize_array(R)
-            G = self.stft(x)
+            G = self.stft1(x)
             G = self.resize_array(G)
-            B = self.stft(x)
+            B = self.stft2(x)
             B = self.resize_array(B)
-            x = np.stack((R, G, B))
+            x = np.concat((R, G, B), dim=1)
 
         return self.resnet(x)
 

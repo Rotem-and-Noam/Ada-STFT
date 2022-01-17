@@ -49,8 +49,12 @@ def get_model(device, ckpt, three_windows, load_resnet_path=None):
     return model
 
 
-def get_optimizer(model, learning_rate, gamma, ckpt):
-    optimizer = torch.optim.AdamW(model.parameters(), learning_rate)
+def get_optimizer(model, learning_rate, gamma, ckpt, optimizer_class):
+    if optimizer_class == "AdamW":
+        optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    elif optimizer_class == "SGD":
+        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
+
     if ckpt.is_ckpt():
         ckpt.load_optimizer(optimizer)
         scheduler = ckpt.load_scheduler()

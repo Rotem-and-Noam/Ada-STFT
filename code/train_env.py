@@ -10,9 +10,9 @@ from options_parser import get_options
 class Env:
 
     def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma, writer,
-                 data_dir, ckpt, ckpt_interval, options, load_resnet_weight_path=None,
+                 data_dir, ckpt, ckpt_interval, options, load_resnet_weight_path=None, optimizer_class="AdamW",
                  split_parts=1, learn_window=0, learn_kernels=0, cpu=False, augmentation=False, three_windows=0,
-                 **kwargs):
+                 test_name=None, **kwargs):
         self.genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
         self.train_data = get_dataloader(mode='train', data_dir=data_dir, genres=self.genres,
                                          batch_size=batch_size, num_workers=num_workers, parts=split_parts,
@@ -29,7 +29,7 @@ class Env:
         else:
             self.device = torch.device('cpu')
         self.model = get_model(self.device, ckpt, three_windows, load_resnet_weight_path)
-        self.optimizer, self.scheduler = get_optimizer(self.model, learning_rate, gamma, ckpt)
+        self.optimizer, self.scheduler = get_optimizer(self.model, learning_rate, gamma, ckpt, optimizer_class)
         self.criterion = torch.nn.CrossEntropyLoss()
         self.split_parts = split_parts
         self.epoch_num = epoch_num
@@ -43,6 +43,8 @@ class Env:
         if learn_kernels:
             self.model.stft.learn_kernels()
         self.model.stft.print_learnable_params()
+        self.three_windows = three_windows
+        self.test_name = test_name
         print(f"Learnable parameters {self.count_parameters(self.model)}")
         print(f"Starting training on device {str(self.device)} for {str(self.epoch_num)} epochs")
 
@@ -52,7 +54,7 @@ class Env:
             train_loss = self.train_epoch()
             val_accuracy, confusion_matrix, val_loss = self.calculate_accuracy_and_loss()
 
-            print(f"epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
+            print(f"{self.test_name}: epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
                   f"train loss: {train_loss:.5f}",
                   f"val loss: {val_loss:.5f}",
                   f"learning rate: {self.optimizer.param_groups[0]['lr']:.6f}")
@@ -78,6 +80,13 @@ class Env:
             self.writer.add_figure('Window',
                                    self.show_window(self.model.stft.win_cof.detach().clone().squeeze(0).cpu().numpy()),
                                    epoch)
+            if self.three_windows:
+                self.writer.add_figure('Window2',
+                                       self.show_window(self.model.stft1.win_cof.detach().clone().squeeze(0).cpu().numpy()),
+                                       epoch)
+                self.writer.add_figure('Window3',
+                                       self.show_window(self.model.stft2.win_cof.detach().clone().squeeze(0).cpu().numpy()),
+                                       epoch)
 
     def show_confusion_matrix(self, confusion_matrix, show=False):
         if show:
@@ -185,13 +194,17 @@ if __name__ == "__main__":
     os.makedirs(ckpt_dir, exist_ok=True)
     ckpt = LoadCkpt(ckpt_dir)
 
-    # tensorboard initialising
-    tensorboard_path = os.path.join(options['tensorboard_dir'], options['test_name'])
-    writer = SummaryWriter(log_dir=tensorboard_path)
+    if ckpt.start_epoch >= options['epoch_num']:
+        print('This test is already done!')
 
-    # train
-    env = Env(writer=writer, ckpt=ckpt, options=options, **options)
-    # env.calculate_accuracy_and_loss('val')
-    env.train()
+    else:
+        # tensorboard initialising
+        tensorboard_path = os.path.join(options['tensorboard_dir'], options['test_name'])
+        writer = SummaryWriter(log_dir=tensorboard_path)
 
-    print("done training! Deep Learning Rules!")
+        # train
+        env = Env(writer=writer, ckpt=ckpt, options=options, **options)
+        # env.calculate_accuracy_and_loss('val')
+        env.train()
+
+        print("done training! Deep Learning Rules!")
