@@ -4,18 +4,27 @@ import json
 
 class LoadCkpt:
 
-    def __init__(self, ckpt_dir):
+    def __init__(self, ckpt_dir, resume, ckpt_file, **kwargs):
         self._dir = ckpt_dir
+        os.makedirs(ckpt_dir, exist_ok=True)
         self._last_file = 'ckpt_last.pt'
         self._best_file = 'ckpt_best.pt'
-        self._ckpt_dict = self._load_ckpt()
+        self._ckpt_file = ckpt_file
+        self._ckpt_dict = None
+        self.resume = resume
+        if resume:
+            self._ckpt_dict = self._load_ckpt()
         self.start_epoch = 0
-        if not(self._ckpt_dict is None):
+        if self._ckpt_dict is not None:
             self.start_epoch = self._load_start_epoch()
-            print(f"loaded check points, strating from epoch: {self.start_epoch}")
+            print(f"loaded check points, starting from epoch: {self.start_epoch}")
 
     def _load_ckpt(self):
-        path = os.path.join(self._dir, self._last_file)
+        if self.resume:
+            file = self._last_file
+        else:
+            file = self._ckpt_file
+        path = os.path.join(self._dir, file)
         if not os.path.isfile(path):
             return None
         else:

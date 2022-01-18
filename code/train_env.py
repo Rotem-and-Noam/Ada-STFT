@@ -9,10 +9,10 @@ from options_parser import get_options
 
 class Env:
 
-    def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma, writer,
-                 data_dir, ckpt, ckpt_interval, options, load_resnet_weight_path=None, optimizer_class="AdamW",
+    def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma,
+                 data_dir, ckpt, ckpt_interval, options, writer=None, load_resnet_weight_path=None,
                  split_parts=1, learn_window=0, learn_kernels=0, cpu=False, augmentation=False, three_windows=0,
-                 test_name=None, **kwargs):
+                 optimizer_class="AdamW", test_name=None, **kwargs):
         self.genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
         self.train_data = get_dataloader(mode='train', data_dir=data_dir, genres=self.genres,
                                          batch_size=batch_size, num_workers=num_workers, parts=split_parts,
@@ -58,8 +58,9 @@ class Env:
             if val_accuracy > self.best_acc:
                 self.best_acc = val_accuracy
                 self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options, True)
-                self.writer.add_figure('best confusion matrix', self.show_confusion_matrix(confusion_matrix, val_accuracy),
-                                       epoch)
+                if writer is not None:
+                    self.writer.add_figure('best confusion matrix', self.show_confusion_matrix(confusion_matrix, val_accuracy),
+                                           epoch)
 
             print(f"{self.test_name}: epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
                   f"train loss: {train_loss:.5f}",
@@ -67,7 +68,8 @@ class Env:
                   f"learning rate: {self.optimizer.param_groups[0]['lr']:.6f}")
 
             # send documentation to tensorboard
-            self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
+            if writer is not None:
+                self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
             # save check points
             if epoch % self.ckpt_interval == self.ckpt_interval - 1:
                 self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options)
@@ -188,20 +190,18 @@ class Env:
               f"test loss: {test_loss:.4f}")
 
 
+
+
 if __name__ == "__main__":
 
     # loading training options and hyper-parameters
-    parser = get_options()
-    options = vars(parser.parse_args())
+    options = vars(get_options().parse_args())
+    options["ckpt_dir"] = os.path.join(options["ckpt_dir"], options['test_name'])
 
     print(f"Starting test: {options['test_name']}")
 
     # check if need to load check points
-    ckpt_dir = os.path.join(options["ckpt_dir"], options['test_name'])
-    options["ckpt_dir"] = ckpt_dir
-    os.makedirs(ckpt_dir, exist_ok=True)
-    ckpt = LoadCkpt(ckpt_dir)
-
+    ckpt = LoadCkpt(**options)
     if ckpt.start_epoch >= options['epoch_num']:
         print('This test is already done!')
 
