@@ -13,22 +13,21 @@
 
 
 # Ada-STFT
-Expanding on existing application of image processing networks to audio using STFT, we propose an adaptive STFT layer that learns the best DFT kernel and window for the application. 
+Expanding on existing application of image processing networks to audio using STFT, we propose an adaptive STFT layer that learns the best DFT kernel coefficients and window coefficients for the application. 
 
 The task of audio-processing using neural networks has proven to be a difficult task, even for the state of the art 1-Dimension processing network.
-The use of STFT to transform an audio-processing challenge into an image-processing challenge enables the use of better and stronger image-processing networks.
-An example of such uses can be found in following paper https://arxiv.org/abs/1706.07156.
+The use of STFT to transform an audio-processing challenge into an image-processing challenge enables the use of better and stronger image-processing networks, such as Resnet.
+An example of such uses can be found in this <a href="https://arxiv.org/abs/1706.07156">paper</a>.
 Because STFT is in essence a feature extractor, base on applying 1-Dimension convolutions, we propose a method to simplify the translation of 1-D sequences into 2-D images.
 We will also improve the vanilla STFT by learning task-specific STFT window coefficients and DFT kernal coefficients, using pytorch's build in capabilities.
 
 In this project, we implemented a toy example of an audio-processing problem - music genre classification - to show the advantages of Ada-STFT.
-We have tried to classify the genre of an audio part from the GTZAN dataset (https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code).
-The music classification task is based on a project done in the technion in 2021, and can be found here https://github.com/omercohen7640/MusicGenreClassifier.
+We have tried to classify the genre of an audio part from the <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>.
+The music classification task is based on a project done in the technion in 2021, and can be found <a href=https://github.com/omercohen7640/MusicGenreClassifier>here</a>.
 
 # Results
 
-# Usage
-### STFT Layer Usage Example
+# Usage of our STFT Modules
 ```python
 import torch
 from torch import nn
@@ -50,6 +49,8 @@ class Classifier(nn.Module):
     def monochrome2RGB(tensor):
         return tensor.repeat(1, 3, 1, 1)
 ```
+
+# Usage of training and testing our model
 
 ### Training Music Genre Classifier
 To train our classifier network, run `train_env.py`.
@@ -100,8 +101,8 @@ Credits:
 ## Agenda
 - [Ada-STFT](#Ada-STFT)
 - [Results](#Results)
-- [Usage](#Usage)
-  - [STFT Layer](#STFT Layer)
+- [Usage of our STFT Modules](#Usage of our STFT Modules)
+- [# Usage of training and testing our model](## Usage of training and testing our model)
   - [Training](#Training Music Genre Classifier)
   - [Testing](#Testing Music Genre Classifier)
 - [STFT Layer Parameters](#STFT Layer Parameters)
