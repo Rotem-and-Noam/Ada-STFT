@@ -47,12 +47,19 @@ class Env:
         self.test_name = test_name
         print(f"Learnable parameters {self.count_parameters(self.model)}")
         print(f"Starting training on device {str(self.device)} for {str(self.epoch_num)} epochs")
+        self.best_acc = 0.5
 
     def train(self):
         for epoch in range(self.start_epoch, self.epoch_num):
 
             train_loss = self.train_epoch()
             val_accuracy, confusion_matrix, val_loss = self.calculate_accuracy_and_loss()
+
+            if val_accuracy > self.best_acc:
+                self.best_acc = val_accuracy
+                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options, True)
+                self.writer.add_figure('best confusion matrix', self.show_confusion_matrix(confusion_matrix, val_accuracy),
+                                       epoch)
 
             print(f"{self.test_name}: epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
                   f"train loss: {train_loss:.5f}",
@@ -76,19 +83,19 @@ class Env:
         self.writer.add_scalar('Window Change', self.model.stft.calc_window_change().item(), epoch)
         self.writer.add_scalar('Kernel Change', self.model.stft.calc_kernels_change().item(), epoch)
         if epoch % self.ckpt_interval == 0:
-            self.writer.add_figure('confusion matrix', self.show_confusion_matrix(confusion_matrix), epoch)
+            self.writer.add_figure('confusion matrix', self.show_confusion_matrix(confusion_matrix, val_accuracy), epoch)
             self.writer.add_figure('Window',
                                    self.show_window(self.model.stft.win_cof.detach().clone().squeeze(0).cpu().numpy()),
                                    epoch)
             if self.three_windows:
-                self.writer.add_figure('Window2',
+                self.writer.add_figure('Window_2',
                                        self.show_window(self.model.stft1.win_cof.detach().clone().squeeze(0).cpu().numpy()),
                                        epoch)
-                self.writer.add_figure('Window3',
+                self.writer.add_figure('Window_3',
                                        self.show_window(self.model.stft2.win_cof.detach().clone().squeeze(0).cpu().numpy()),
                                        epoch)
 
-    def show_confusion_matrix(self, confusion_matrix, show=False):
+    def show_confusion_matrix(self, confusion_matrix, accuracy, show=False):
         if show:
             plt.close()
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
@@ -98,6 +105,7 @@ class Env:
         plt.yticks(range(self.class_number), self.genres)
         plt.xlabel('Predicted Category')
         plt.xticks(range(self.class_number), self.genres)
+        plt.title(f"Accuracy: {accuracy}")
         if show:
             plt.show()
         return fig
