@@ -11,6 +11,13 @@
     Rotem Idelson: <a href="https://www.linkedin.com/in/rotem-idelson/">LinkdIn</a> , <a href="https://github.com/RotemId">GitHub</a>
   </p>
 
+## Agenda
+- [Ada-STFT](#Ada-STFT) - about our project
+- [Results](#Results)
+- [STFT-Moudle](#STFT-Moudle) - how to use our STFT layer
+- [Run-our-model](#Run-our-model) - how to run training jobs and inference with our model
+- [Parameters](#Parameters)
+- [Prerequisites](#Prerequisites) - Prerequisites of the environment
 
 # Ada-STFT
 Expanding on existing application of image processing networks to audio using STFT, we propose an adaptive STFT layer that learns the best DFT kernel coefficients and window coefficients for the application. 
@@ -28,6 +35,8 @@ The music classification task is based on a project done in the technion in 2021
 # Results
 
 # STFT-Moudle
+
+## Code
 ```python
 import torch
 from torch import nn
@@ -50,6 +59,18 @@ class Classifier(nn.Module):
         return tensor.repeat(1, 3, 1, 1)
 ```
 
+## STFT Layer Parameters
+|Parameter | Description |
+|-------|---------------------|
+|nfft| window size of STFT calculation|
+|hop_length | STFT hop size, or stride of STFT calculation|
+| window | type of window to initialize the STFT window to, one of the windows implemented in scipy.signal|
+| sample_rate | sampling rate for audio|
+| num_mels | number of mel scale frequencies to use, None for don't use mel frequencies|
+| log_base | base of log to apply  to STFT, None for no log|
+| learn_window | should window be learned (can be set after layer initialization)|
+| learn_kernels | should DFT kernel be learned (can be set after layer initialization)|
+
 # Run-our-model
 
 ## Training Music Genre Classifier
@@ -70,20 +91,8 @@ Setting the `test_name` argument can be done through `options.json` or command l
 python ./test.py --test_name run_learn_window
 ```
 
-# STFT Layer Parameters
-|Parameter | Description |
-|-------|---------------------|
-|nfft| window size of STFT calculation|
-|hop_length | STFT hop size, or stride of STFT calculation|
-| window | type of window to initialize the STFT window to, one of the windows implemented in scipy.signal|
-| sample_rate | sampling rate for audio|
-| num_mels | number of mel scale frequencies to use, None for don't use mel frequencies|
-| log_base | base of log to apply  to STFT, None for no log|
-| learn_window | should window be learned (can be set after layer initialization)|
-| learn_kernels | should DFT kernel be learned (can be set after layer initialization)|
 
-
-## Prerequisites
+# Prerequisites
 |Library         | Version |
 |--------------------|----|
 |`Python`|  `3.5.5 (Anaconda)`|
@@ -97,14 +106,4 @@ python ./test.py --test_name run_learn_window
 
 Credits:
 * Animation by <a href="https://medium.com/@gumgumadvertisingblog">GumGum</a>.
-
-## Agenda
-- [Ada-STFT](#Ada-STFT)
-- [Results](#Results)
-- [STFT-Moudle](#STFT-Moudle)
-- [Run-our-model](#Run-our-model)
-  - [Training](##Training Music Genre Classifier)
-  - [Testing](##Testing Music Genre Classifier)
-- [STFT Layer Parameters](#STFT Layer Parameters)
-- [Prerequisites](#Prerequisites)
 
