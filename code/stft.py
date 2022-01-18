@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 
 
 class STFT(nn.Module):
-    def __init__(self, nfft=1024, hop_length=512, window="hanning", sample_rate=22050, num_mels=128, log_base=10):
+    def __init__(self, nfft=1024, hop_length=512, window="hanning", sample_rate=22050, num_mels=128, log_base=10,
+                 learn_window=False, learn_kernels=False):
         super(STFT, self).__init__()
         assert nfft % 2 == 0
 
@@ -22,8 +23,8 @@ class STFT(nn.Module):
         self.log_base = log_base
         self.sample_rate = sample_rate
         self.initial_window, self.initial_kernel = self._init_kernels(nfft, window)
-        self.win_cof = nn.Parameter(torch.clone(self.initial_window), requires_grad=False)
-        self.kernels = nn.Parameter(torch.clone(self.initial_kernel), requires_grad=False)
+        self.win_cof = nn.Parameter(torch.clone(self.initial_window), requires_grad=learn_window)
+        self.kernels = nn.Parameter(torch.clone(self.initial_kernel), requires_grad=learn_kernels)
         self.real_kernels, self.imag_kernels = None, None
 
     def forward(self, sample):
@@ -62,10 +63,7 @@ class STFT(nn.Module):
 
         kernels = np.fromfunction(kernel_fn, (nfft//2+1, nfft), dtype=np.float64)
 
-        if window == "hanning":
-            win_cof = scipy.signal.get_window("hanning", nfft)[np.newaxis, :]
-        else:
-            win_cof = np.ones((1, nfft), dtype=np.float64)
+        win_cof = scipy.signal.get_window(window, nfft)[np.newaxis, :]
 
         initial_window = torch.from_numpy(win_cof)
         initial_kernel = torch.from_numpy(kernels)
