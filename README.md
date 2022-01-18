@@ -13,6 +13,7 @@
 
 ## Agenda
 - [Ada-STFT](#Ada-STFT) - about our project
+- [Our-Model](#Our-Model) - about our project
 - [Results](#Results) - our results
 - [STFT-Moudle](#STFT-Moudle) - how to use our STFT layer
 - [Run-our-model](#Run-our-model) - how to run training jobs and inference with our model
@@ -31,7 +32,14 @@ In this project, we implemented a toy example of an audio-processing problem - m
 We have tried to classify the genre of an audio part from the <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>.
 The music classification task is based on a project done in the technion in 2021, and can be found <a href=https://github.com/omercohen7640/MusicGenreClassifier>here</a>.
 
+# Our-Model
+
+<img src="images/im1.png" height="200">
+
+
 # Results
+
+
 
 # STFT-Moudle
 
