@@ -17,7 +17,7 @@ class STFT(nn.Module):
         assert nfft % 2 == 0
 
         self.hop_length = hop_length
-        self.n_freq = n_freq = nfft//2 + 1
+        self.n_freq = nfft//2 + 1
         self.nfft = nfft
         self.num_mels = num_mels
         self.log_base = log_base
@@ -106,28 +106,24 @@ class STFT(nn.Module):
         return torch.norm(self.kernels.detach() - self.initial_kernel.to(self.win_cof.device))
 
 
-
 if __name__ == "__main__":
-    # sr = 22050
-    # import torchaudio_augmentations as taa
-    #
-    # augmentations = taa.Compose([
-    #     # taa.RandomApply([taa.Noise(min_snr=0.001, max_snr=0.005)], p=1),
-    #     # taa.RandomApply([taa.Gain()], p=1),
-    #     # taa.RandomApply([taa.HighLowPass(sample_rate=sr)], p=1), # this augmentation will always be applied in this aumgentation chain!
-    #     taa.RandomApply([taa.Delay(sample_rate=sr)], p=1),
-    # ])
     path = r"/home/tiras/adastft/dataset/genres/blues/blues.00029.wav"
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    tensor, sr = librosa.load(path, 22050)
-    # tensor = tensor - np.mean(tensor)
-    tensor = augmentations(torch.from_numpy(tensor[np.newaxis, :])).to(device)
+    array, sr = librosa.load(path, 22050)
+
+    tensor = torch.from_numpy(array[np.newaxis, :]).to(device)
+    slice = tensor.shape[1] // 6
+    tensor_ = tensor[:, :slice]
     model = STFT(window="hanning").to(device)
-    stft = model.forward(tensor).T.detach().to("cpu")
-    # loss = torch.nn.MSELoss()(stft, 0*stft)
-    # loss.backward()
-    # print(model.win_cof.grad)
+    stft = model.forward(tensor_).detach().to("cpu")
 
     plt.imshow(stft.squeeze().detach().numpy())
+    plt.xlabel("time")
+    plt.ylabel("frequency")
+    plt.axis("off")
     plt.show()
-    pass
+
+    plt.plot(tensor_.detach().to("cpu").numpy()[0])
+    plt.xlabel("time")
+    plt.axis("off")
+    plt.show()

@@ -6,16 +6,17 @@ import json
 def objective(trial):
 
     # loading training options and hyper-parameters
-    with open("optuna_options", 'r') as fp:
+    with open("optuna_options.json", 'r') as fp:
         optuna_options = json.load(fp)
 
     optuna_options['learning_rate'] = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
     optuna_options['optimizer_class'] = trial.suggest_categorical("optimizer", ["SGD", "AdamW"])
     optuna_options['split_parts'] = trial.suggest_categorical("split_parts", [1, 3, 4, 6, 12])
+    optuna_options['augmentation'] = trial.suggest_categorical("augmentation", [0, 1])
     optuna_options['gamma'] = trial.suggest_float("gamma", 0.99, 1)
     optuna_options['test_name'] = optuna_options['test_name'] + str(trial.number)
 
-    print(f"Starting test: {options['test_name']}")
+    print(f"Starting test: {optuna_options['test_name']}")
 
     # check if need to load check points
     optuna_ckpt = LoadCkpt(**optuna_options)
@@ -26,6 +27,8 @@ def objective(trial):
     # train
     optuna_env = Env(writer=optuna_writer, ckpt=optuna_ckpt, options=optuna_options, **optuna_options)
 
+    val_accuracy = 0
+
     for epoch in range(optuna_env.start_epoch, optuna_env.epoch_num):
 
         train_loss = optuna_env.train_epoch()
@@ -34,7 +37,7 @@ def objective(trial):
         if val_accuracy > optuna_env.best_acc:
             optuna_env.best_acc = val_accuracy
             optuna_env.ckpt.save_ckpt(optuna_env.model, optuna_env.optimizer, optuna_env.scheduler, epoch, optuna_env.options, True)
-            if writer is not None:
+            if optuna_env.writer is not None:
                 optuna_env.writer.add_figure('best confusion matrix',
                                              optuna_env.show_confusion_matrix(confusion_matrix, val_accuracy),
                                              epoch)
@@ -45,13 +48,13 @@ def objective(trial):
               f"learning rate: {optuna_env.optimizer.param_groups[0]['lr']:.6f}")
 
         # send documentation to tensorboard
-        if writer is not None:
+        if optuna_env.writer is not None:
             optuna_env.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
         # save check points
         if epoch % optuna_env.ckpt_interval == optuna_env.ckpt_interval - 1:
             optuna_env.ckpt.save_ckpt(optuna_env.model, optuna_env.optimizer, optuna_env.scheduler, epoch, optuna_env.options)
 
-        trial.report(val_accuracy)
+        trial.report(val_accuracy, epoch)
 
         if trial.should_prune():
             raise optuna.exceptions.TrialPruned()
@@ -62,8 +65,9 @@ def objective(trial):
 if __name__ == "__main__":
 
     sampler = optuna.samplers.TPESampler()
-    study = optuna.create_study(study_name="AdaSTFT", direction="maximize", sampler=sampler)
-    study.optimize(objective, n_trials=100, timout=600)
+    study = optuna.create_study(study_name="AdaSTFT", direction="maximize", sampler=sampler,
+                                pruner=optuna.pruners.MedianPruner())
+    study.optimize(objective, n_trials=100, gc_after_trial=True, n_jobs=2)
     pruned_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED]
     complete_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
 

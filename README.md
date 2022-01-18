@@ -11,24 +11,39 @@
     Rotem Idelson: <a href="https://www.linkedin.com/in/rotem-idelson/">LinkdIn</a> , <a href="https://github.com/RotemId">GitHub</a>
   </p>
 
+## Agenda
+- [Ada-STFT](#Ada-STFT) - about our project
+- [Our-Model](#Our-Model) - about our project
+- [Results](#Results) - our results
+- [STFT-Moudle](#STFT-Moudle) - how to use our STFT layer
+- [Run-our-model](#Run-our-model) - how to run training jobs and inference with our model
+- [Prerequisites](#Prerequisites) - Prerequisites of the environment
 
 # Ada-STFT
-Expanding on existing application of image processing networks to audio using STFT, we propose an adaptive STFT layer that learns the best DFT kernel and window for the application. 
+Expanding on existing application of image processing networks to audio using STFT, we propose an adaptive STFT layer that learns the best DFT kernel coefficients and window coefficients for the application. 
 
 The task of audio-processing using neural networks has proven to be a difficult task, even for the state of the art 1-Dimension processing network.
-The use of STFT to transform an audio-processing challenge into an image-processing challenge enables the use of better and stronger image-processing networks.
-An example of such uses can be found in following paper https://arxiv.org/abs/1706.07156.
+The use of STFT to transform an audio-processing challenge into an image-processing challenge enables the use of better and stronger image-processing networks, such as Resnet.
+An example of such uses can be found in this <a href="https://arxiv.org/abs/1706.07156">paper</a>.
 Because STFT is in essence a feature extractor, base on applying 1-Dimension convolutions, we propose a method to simplify the translation of 1-D sequences into 2-D images.
 We will also improve the vanilla STFT by learning task-specific STFT window coefficients and DFT kernal coefficients, using pytorch's build in capabilities.
 
 In this project, we implemented a toy example of an audio-processing problem - music genre classification - to show the advantages of Ada-STFT.
-We have tried to classify the genre of an audio part from the GTZAN dataset (https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code).
-The music classification task is based on a project done in the technion in 2021, and can be found here https://github.com/omercohen7640/MusicGenreClassifier.
+We have tried to classify the genre of an audio part from the <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>.
+The music classification task is based on a project done in the technion in 2021, and can be found <a href=https://github.com/omercohen7640/MusicGenreClassifier>here</a>.
+
+# Our-Model
+
+<img src="images/im1.png" height="200">
+
 
 # Results
 
-# Usage
-### STFT Layer Usage Example
+
+
+# STFT-Moudle
+
+## Code
 ```python
 import torch
 from torch import nn
@@ -51,25 +66,7 @@ class Classifier(nn.Module):
         return tensor.repeat(1, 3, 1, 1)
 ```
 
-### Training Music Genre Classifier
-To train our classifier network, run `train_env.py`.
-```cmd
-python ./train_env.py --test_name run_basic
-```
-Test parameters are automatically loaded from the options.json in the project directory.
-Changes to the parameters can be applied by changing the `options.json` or running with command line arguments, for example:
-```cmd
-python ./train_env.py --test_name run_learn_window --learn_window 1
-```
-
-### Testing Music Genre Classifier
-Run the `test.py` with the `test_name` argument set to the name of the model being tested.
-Setting the `test_name` argument can be done through `options.json` or command line:
-```cmd
-python ./test.py --test_name run_learn_window
-```
-
-# STFT Layer Parameters
+## STFT Layer Parameters
 |Parameter | Description |
 |-------|---------------------|
 |nfft| window size of STFT calculation|
@@ -81,8 +78,35 @@ python ./test.py --test_name run_learn_window
 | learn_window | should window be learned (can be set after layer initialization)|
 | learn_kernels | should DFT kernel be learned (can be set after layer initialization)|
 
+# Run-our-model
 
-## Prerequisites
+## Training Music Genre Classifier
+To train our classifier network, run `train_env.py`.
+```cmd
+python ./train_env.py --test_name run_basic
+```
+training job parameters are automatically loaded from the options.json in the project directory.
+Changes to the parameters can be applied by changing the `options.json` or running with command line arguments, for example:
+```cmd
+python ./train_env.py --test_name run_learn_window --learn_window 1
+```
+
+## Inference Music Genre Classifier
+Run the `test.py` with the `test_name` argument set to the name of the model being inferenced.
+You should set the ckpt_dir parameter as the father checkpoints directory, and ckpt_file as the file name.
+For example, if you set the folowing parametrs as:
+`ckpt_dir = "checkpoints"`, `test_name = "my_test.pt"`, `ckpt_dir = "best_ckpt.pt"`,
+than the checkpoints file full path that will beloaded is: `\checkpoints\my_test\best_ckpt.pt`
+
+
+Setting the `test_name` argument can be done through `options.json` or through command line:
+```cmd
+python ./test.py --test_name my_test --ckpt_dir checkpoints --ckpt_dir best_ckpt.pt
+```
+
+
+
+# Prerequisites
 |Library         | Version |
 |--------------------|----|
 |`Python`|  `3.5.5 (Anaconda)`|
@@ -98,14 +122,4 @@ Credits:
 * Music Genre Classifier Project for classifier network architecture https://github.com/omercohen7640/MusicGenreClassifier
 * Animation by <a href="https://medium.com/@gumgumadvertisingblog">GumGum</a>.
 * STFT implemenation https://github.com/diggerdu/pytorch_audio
-
-## Agenda
-- [Ada-STFT](#Ada-STFT)
-- [Results](#Results)
-- [Usage](#Usage)
-  - [STFT Layer](#STFT Layer)
-  - [Training](#Training Music Genre Classifier)
-  - [Testing](#Testing Music Genre Classifier)
-- [STFT Layer Parameters](#STFT Layer Parameters)
-- [Prerequisites](#Prerequisites)
 

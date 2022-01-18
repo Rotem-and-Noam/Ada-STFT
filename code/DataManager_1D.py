@@ -108,6 +108,7 @@ def load_gtza_from_torch():
     testset = torchaudio.datasets.GTZAN(root="./datasets", download=True, subset="testing")
     return trainset, validset, testset
 
+
 def get_augmentations():
     import torchaudio_augmentations as taa
     sr = 22050
