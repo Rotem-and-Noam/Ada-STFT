@@ -95,7 +95,9 @@ python ./test.py --test_name run_learn_window
 |`tensorboard`| `2.7.0`|
 
 Credits:
+* Music Genre Classifier Project for classifier network architecture https://github.com/omercohen7640/MusicGenreClassifier
 * Animation by <a href="https://medium.com/@gumgumadvertisingblog">GumGum</a>.
+* STFT implemenation https://github.com/diggerdu/pytorch_audio
 
 ## Agenda
 - [Ada-STFT](#Ada-STFT)
