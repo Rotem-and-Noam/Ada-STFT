@@ -38,12 +38,18 @@ class Env:
         self.options = options
         self.ckpt = ckpt
         self.ckpt_interval = ckpt_interval
+        self.three_windows = three_windows
         if learn_window:
             self.model.stft.learn_window()
+            if self.three_windows:
+                self.model.stft1.learn_window()
+                self.model.stft2.learn_window()
         if learn_kernels:
             self.model.stft.learn_kernels()
+            if self.three_windows:
+                self.model.stft1.learn_kernels()
+                self.model.stft2.learn_kernels()
         self.model.stft.print_learnable_params()
-        self.three_windows = three_windows
         self.test_name = test_name
         print(f"Learnable parameters {self.count_parameters(self.model)}")
         print(f"Starting training on device {str(self.device)} for {str(self.epoch_num)} epochs")
@@ -122,23 +128,21 @@ class Env:
         self.model.train()
         train_epoch_loss = 0
         samples_total = 0
-        with tqdm(total=self.data_length) as pbar:
-            for j, sample in enumerate(self.train_data):
-                waveforms, labels = sample
+        for j, sample in enumerate(self.train_data):
+            waveforms, labels = sample
 
-                # getting batch output and calculating batch loss
-                output = self.model(waveforms.to(self.device))
-                loss = self.criterion(output, labels.to(self.device))
+            # getting batch output and calculating batch loss
+            output = self.model(waveforms.to(self.device))
+            loss = self.criterion(output, labels.to(self.device))
 
-                # the three musketeers:
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+            # the three musketeers:
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-                # updating parameters for calculating total loss
-                train_epoch_loss += loss.detach().item() * labels.size(0)
-                samples_total += labels.size(0)
-                pbar.update()
+            # updating parameters for calculating total loss
+            train_epoch_loss += loss.detach().item() * labels.size(0)
+            samples_total += labels.size(0)
 
         # calculating mean train loss for epoch
         train_loss = train_epoch_loss / samples_total

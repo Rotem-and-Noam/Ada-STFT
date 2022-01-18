@@ -17,5 +17,5 @@
   "cpu": 0,
   "augmentation": 0,
   "three_widows": 0,
-  "optimizer_class": "AdamW",
+  "optimizer_class": "AdamW"
 }
