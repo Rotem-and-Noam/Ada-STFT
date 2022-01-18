@@ -9,7 +9,7 @@ from options_parser import get_options
 
 class Env:
 
-    def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma, writer,
+    def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma, writer=None,
                  data_dir, ckpt, ckpt_interval, options, load_resnet_weight_path=None, optimizer_class="AdamW",
                  split_parts=1, learn_window=0, learn_kernels=0, cpu=False, augmentation=False, three_windows=0,
                  test_name=None, **kwargs):
@@ -67,7 +67,8 @@ class Env:
                   f"learning rate: {self.optimizer.param_groups[0]['lr']:.6f}")
 
             # send documentation to tensorboard
-            self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
+            if self.writer is not None:
+                self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
             # save check points
             if epoch % self.ckpt_interval == self.ckpt_interval - 1:
                 self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options)
@@ -187,6 +188,12 @@ class Env:
         print(f"test accuracy: {100 * test_accuracy:.4f}%",
               f"test loss: {test_loss:.4f}")
 
+def check_checkpoints(options):
+    ckpt_dir = os.path.join(options["ckpt_dir"], options['test_name'])
+    options["ckpt_dir"] = ckpt_dir
+    os.makedirs(ckpt_dir, exist_ok=True)
+    ckpt = LoadCkpt(ckpt_dir)
+    return ckpt
 
 if __name__ == "__main__":
 
@@ -197,10 +204,7 @@ if __name__ == "__main__":
     print(f"Starting test: {options['test_name']}")
 
     # check if need to load check points
-    ckpt_dir = os.path.join(options["ckpt_dir"], options['test_name'])
-    options["ckpt_dir"] = ckpt_dir
-    os.makedirs(ckpt_dir, exist_ok=True)
-    ckpt = LoadCkpt(ckpt_dir)
+    ckpt = check_checkpoints(options)
 
     if ckpt.start_epoch >= options['epoch_num']:
         print('This test is already done!')
