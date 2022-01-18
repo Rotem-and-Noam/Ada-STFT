@@ -11,12 +11,6 @@
     Rotem Idelson: <a href="https://www.linkedin.com/in/rotem-idelson/">LinkdIn</a> , <a href="https://github.com/RotemId">GitHub</a>
   </p>
 
-  <p align="center">
-    <a href="https://colab.research.google.com/Rotem-and-Noam/Ada-STFT/ee046211-deep-learning"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-    <a href="https://nbviewer.jupyter.org/github/Rotem-and-Noam/Ada-STFT/tree/main/"><img src="https://raw.githubusercontent.com/taldatech/ee046211-deep-learning/main/assets/nbviewer_badge.svg" alt="Open In NBViewer"/></a>
-    <a href="https://mybinder.org/v2/gh/Rotem-and-Noam/Ada-STFT/main"><img src="https://mybinder.org/badge_logo.svg" alt="Open In Binder"/></a>
-  </p>
-
 
 # Ada-STFT
 Expanding on existing application of image processing networks to audio using STFT, we propose an adaptive STFT layer that learns the best DFT kernel and window for the application. 
