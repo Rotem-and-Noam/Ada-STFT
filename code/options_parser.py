@@ -2,10 +2,10 @@ import argparse
 import json
 
 
-def get_options():
+def get_options(json_file="options.json"):
 
     # loading training options and hyper-parameters
-    with open("options.json", 'r') as fp:
+    with open(json_file, 'r') as fp:
         options = json.load(fp)
 
     parser = argparse.ArgumentParser()

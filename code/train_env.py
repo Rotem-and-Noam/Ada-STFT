@@ -190,8 +190,6 @@ class Env:
               f"test loss: {test_loss:.4f}")
 
 
-
-
 if __name__ == "__main__":
 
     # loading training options and hyper-parameters

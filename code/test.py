@@ -10,11 +10,12 @@ if __name__ == "__main__":
 
     # check if need to load check points
     ckpt = LoadCkpt(**options)
+    ckpt_options = ckpt.load_options()
 
     # train
     data = 'test'
-    env = Env(writer=writer, ckpt=ckpt, options=options, **options)
-    env.calculate_accuracy_and_loss(data)
+    env = Env(writer=writer, ckpt=ckpt, options=options, **ckpt_options)
+    model_accuracy, confusion_matrix, loss_total = env.calculate_accuracy_and_loss(data)
+    env.show_confusion_matrix(confusion_matrix, model_accuracy, True)
 
     print("done testing! Deep Learning Rules!")
-

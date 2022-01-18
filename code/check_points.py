@@ -65,7 +65,7 @@ class LoadCkpt:
         }
 
         if not best:
-            torch.save(ckpt_dict, os.path.join(self._dir, f"ckpt_{epoch}.pt"))
+            #torch.save(ckpt_dict, os.path.join(self._dir, f"ckpt_{epoch}.pt"))
             torch.save(ckpt_dict, os.path.join(self._dir, self._last_file))
         else:
             torch.save(ckpt_dict, os.path.join(self._dir, self._best_file))
