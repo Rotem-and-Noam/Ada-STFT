@@ -13,10 +13,9 @@
 
 ## Agenda
 - [Ada-STFT](#Ada-STFT) - about our project
-- [Results](#Results)
+- [Results](#Results) - our results
 - [STFT-Moudle](#STFT-Moudle) - how to use our STFT layer
 - [Run-our-model](#Run-our-model) - how to run training jobs and inference with our model
-- [Parameters](#Parameters)
 - [Prerequisites](#Prerequisites) - Prerequisites of the environment
 
 # Ada-STFT
@@ -78,18 +77,25 @@ To train our classifier network, run `train_env.py`.
 ```cmd
 python ./train_env.py --test_name run_basic
 ```
-Test parameters are automatically loaded from the options.json in the project directory.
+training job parameters are automatically loaded from the options.json in the project directory.
 Changes to the parameters can be applied by changing the `options.json` or running with command line arguments, for example:
 ```cmd
 python ./train_env.py --test_name run_learn_window --learn_window 1
 ```
 
-## Testing Music Genre Classifier
-Run the `test.py` with the `test_name` argument set to the name of the model being tested.
-Setting the `test_name` argument can be done through `options.json` or command line:
+## Inference Music Genre Classifier
+Run the `test.py` with the `test_name` argument set to the name of the model being inferenced.
+You should set the ckpt_dir parameter as the father checkpoints directory, and ckpt_file as the file name.
+For example, if you set the folowing parametrs as:
+`ckpt_dir = "checkpoints"`, `test_name = "my_test.pt"`, `ckpt_dir = "best_ckpt.pt"`,
+than the checkpoints file full path that will beloaded is: `\checkpoints\my_test\best_ckpt.pt`
+
+
+Setting the `test_name` argument can be done through `options.json` or through command line:
 ```cmd
-python ./test.py --test_name run_learn_window
+python ./test.py --test_name my_test --ckpt_dir checkpoints --ckpt_dir best_ckpt.pt
 ```
+
 
 
 # Prerequisites
