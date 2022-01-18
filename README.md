@@ -27,7 +27,7 @@ The music classification task is based on a project done in the technion in 2021
 
 # Results
 
-# Usage of our STFT Modules
+# STFT-Moudle
 ```python
 import torch
 from torch import nn
@@ -50,9 +50,9 @@ class Classifier(nn.Module):
         return tensor.repeat(1, 3, 1, 1)
 ```
 
-# Usage of training and testing our model
+# Run-our-model
 
-### Training Music Genre Classifier
+## Training Music Genre Classifier
 To train our classifier network, run `train_env.py`.
 ```cmd
 python ./train_env.py --test_name run_basic
@@ -63,7 +63,7 @@ Changes to the parameters can be applied by changing the `options.json` or runni
 python ./train_env.py --test_name run_learn_window --learn_window 1
 ```
 
-### Testing Music Genre Classifier
+## Testing Music Genre Classifier
 Run the `test.py` with the `test_name` argument set to the name of the model being tested.
 Setting the `test_name` argument can be done through `options.json` or command line:
 ```cmd
@@ -101,10 +101,10 @@ Credits:
 ## Agenda
 - [Ada-STFT](#Ada-STFT)
 - [Results](#Results)
-- [Usage of our STFT Modules](#Usage of our STFT Modules)
-- [# Usage of training and testing our model](## Usage of training and testing our model)
-  - [Training](#Training Music Genre Classifier)
-  - [Testing](#Testing Music Genre Classifier)
+- [STFT-Moudle](#STFT-Moudle)
+- [Run-our-model](#Run-our-model)
+  - [Training](##Training Music Genre Classifier)
+  - [Testing](##Testing Music Genre Classifier)
 - [STFT Layer Parameters](#STFT Layer Parameters)
 - [Prerequisites](#Prerequisites)
 
