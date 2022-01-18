@@ -1,11 +1,12 @@
 import torch
 import os
+import json
 
 class LoadCkpt:
 
     def __init__(self, ckpt_dir):
         self._dir = ckpt_dir
-        self._last_file = 'ckpt_last'
+        self._last_file = 'ckpt_last.pt'
         self._ckpt_dict = self._load_ckpt()
         self.start_epoch = 0
         if not(self._ckpt_dict is None):

@@ -21,8 +21,9 @@ class STFT(nn.Module):
         self.num_mels = num_mels
         self.log_base = log_base
         self.sample_rate = sample_rate
-
-        self.win_cof, self.kernels = self._init_kernels(nfft, window)
+        self.initial_window, self.initial_kernel = self._init_kernels(nfft, window)
+        self.win_cof = nn.Parameter(torch.clone(self.initial_window), requires_grad=False)
+        self.kernels = nn.Parameter(torch.clone(self.initial_kernel), requires_grad=False)
         self.real_kernels, self.imag_kernels = None, None
 
     def forward(self, sample):
@@ -52,7 +53,6 @@ class STFT(nn.Module):
             magn = self.apply_log(magn, self.log_base)
         return magn
 
-
     def _init_kernels(self, nfft, window):
         nfft = int(nfft)
         assert nfft % 2 == 0
@@ -67,14 +67,10 @@ class STFT(nn.Module):
         else:
             win_cof = np.ones((1, nfft), dtype=np.float64)
 
-        self.initial_window = torch.from_numpy(win_cof)
-        self.initial_kernel = torch.from_numpy(kernels)
+        initial_window = torch.from_numpy(win_cof)
+        initial_kernel = torch.from_numpy(kernels)
 
-        win_cof = nn.Parameter(torch.clone(self.initial_window), requires_grad=False)
-
-        kernels = nn.Parameter(torch.clone(self.initial_kernel), requires_grad=False)
-
-        return win_cof, kernels
+        return initial_window, initial_kernel
 
 
     def _get_stft_kernels(self):

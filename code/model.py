@@ -5,8 +5,9 @@ from torch import nn
 from resnet_dropout import *
 from stft import STFT
 
+
 class Classifier(nn.Module):
-    def __init__(self, num_classes=10, resnet=resnet18, nfft=1024, hop_length=512,
+    def __init__(self, three_windows, num_classes=10, resnet=resnet18, nfft=1024, hop_length=512,
                  window="hanning", sample_rate=22050, num_mels=128,
                  log_base=10, parts=12, length=1024):
         super(Classifier, self).__init__()
@@ -14,19 +15,33 @@ class Classifier(nn.Module):
         self.split_parts = parts
         self.stft = STFT(nfft=nfft, hop_length=hop_length, window=window,
                          sample_rate=sample_rate, num_mels=num_mels, log_base=log_base)
+        self.stft1 = STFT(nfft=nfft, hop_length=hop_length, window=window,
+                         sample_rate=sample_rate, num_mels=num_mels, log_base=log_base)
+        self.stft2 = STFT(nfft=nfft, hop_length=hop_length, window=window,
+                         sample_rate=sample_rate, num_mels=num_mels, log_base=log_base)
         self.resnet = resnet(num_classes=num_classes)
+        self.three_windows = three_windows
 
     def load_resnet_weights(self, path):
         self.resnet.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
         print(f"Loaded resnet weights from: {path}")
 
     def forward(self, x):
-        if not self.training:
-            x = x.reshape(x.shape[0] * self.split_parts, -1)
-        x = self.stft(x)
-        x = self.resize_array(x)
-        # x = self.split_into_batch(x)
-        x = self.monochrome2RGB(x)
+        # if not self.training:
+        #    x = x.reshape(x.shape[0] * self.split_parts, 1, -1)
+        if not self.three_windows:
+            x = self.stft(x)
+            x = self.resize_array(x)
+            x = self.monochrome2RGB(x)
+        else:
+            R = self.stft(x)
+            R = self.resize_array(R)
+            G = self.stft1(x)
+            G = self.resize_array(G)
+            B = self.stft2(x)
+            B = self.resize_array(B)
+            x = np.concat((R, G, B), dim=1)
+
         return self.resnet(x)
 
     def resize_array(self, tensor):
