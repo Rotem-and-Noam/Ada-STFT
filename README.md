@@ -1,4 +1,4 @@
-# Adaptive STFT: Classify Music Geners with a learnable spectogram layer
+# Adaptive STFT: Classify Music Genres with a learnable spectrogram layer
 <h2 align="center">
   <br>
  Our final project for the Technion's EE Deep Learning course (046211)
@@ -28,7 +28,7 @@ The music classification task is based on a project done in the technion in 2021
 # Results
 
 # Usage
-### STFT Layer
+### STFT Layer Usage Example
 ```python
 import torch
 from torch import nn
@@ -41,7 +41,6 @@ class Classifier(nn.Module):
         self.stft = STFT(window=window)
         self.resnet = resnet(num_classes=num_classes)
 
-
     def forward(self, x):
         x = self.stft(x)
         x = self.monochrome2RGB(x)
@@ -52,60 +51,40 @@ class Classifier(nn.Module):
         return tensor.repeat(1, 3, 1, 1)
 ```
 
-### Testing Music Genre Classifier
-```python
-import os
-import numpy as np
-from tqdm import tqdm
-import matplotlib.pyplot as plt
-from torch.utils.tensorboard import SummaryWriter
-from code.check_points import *
-from code.get_components import *
-from code.options_parser import get_options
-from code.train_env import Env, check_checkpoints
-
-parser = get_options()
-options = vars(parser.parse_args())
-ckpt = check_checkpoints(options)
-env = Env(ckpt=ckpt, options=options, **options)
-env.test()
-```
-
 ### Training Music Genre Classifier
-```python
-import os
-import numpy as np
-from tqdm import tqdm
-import matplotlib.pyplot as plt
-from torch.utils.tensorboard import SummaryWriter
-from code.check_points import *
-from code.get_components import *
-from code.options_parser import get_options
-from code.train_env import Env, check_checkpoints
-
-parser = get_options()
-options = vars(parser.parse_args())
-ckpt = check_checkpoints(options)
-tensorboard_path = os.path.join(options['tensorboard_dir'], options['test_name'])
-writer = SummaryWriter(log_dir=tensorboard_path)
-env = Env(writer=writer, ckpt=ckpt, options=options, **options)
-env.train()
+To train our classifier network, run `train_env.py`.
+```cmd
+python ./train_env.py --test_name run_basic
 ```
+Test parameters are automatically loaded from the options.json in the project directory.
+Changes to the parameters can be applied by changing the `options.json` or running with command line arguments, for example:
+```cmd
+python ./train_env.py --test_name run_learn_window --learn_window 1
+```
+
+### Testing Music Genre Classifier
+Run the `test.py` with the `test_name` argument set to the name of the model being tested.
+Setting the `test_name` argument can be done through `options.json` or command line:
+```cmd
+python ./test.py --test_name run_learn_window
+```
+
 # STFT Layer Parameters
 |Parameter | Description |
 |-------|---------------------|
-|nfft| window size of STFT calculation
-|hop_length | STFT hop size, or stride of STFT calculation
-| window | type of window to initialize the STFT window to, one of the windows implemented in scipy.signal
-| sample_rate | sampling rate for audio
-| num_mels | number of mel scale frequencies to use, None for don't use mel frequencies
-| log_base | base of log to apply  to STFT, None for no log
-| learn_window | should window be learned (can be set after layer initialization)
-| learn_kernels | should DFT kernel be learned (can be set after layer initialization)
+|nfft| window size of STFT calculation|
+|hop_length | STFT hop size, or stride of STFT calculation|
+| window | type of window to initialize the STFT window to, one of the windows implemented in scipy.signal|
+| sample_rate | sampling rate for audio|
+| num_mels | number of mel scale frequencies to use, None for don't use mel frequencies|
+| log_base | base of log to apply  to STFT, None for no log|
+| learn_window | should window be learned (can be set after layer initialization)|
+| learn_kernels | should DFT kernel be learned (can be set after layer initialization)|
+
 
 ## Prerequisites
 |Library         | Version |
-|----------------------|----|
+|--------------------|----|
 |`Python`|  `3.5.5 (Anaconda)`|
 |`scipy`| `1.7.3`|
 |`tqdm`| `4.62.3`|
@@ -123,8 +102,8 @@ Credits:
 - [Results](#Results)
 - [Usage](#Usage)
   - [STFT Layer](#STFT Layer)
-  - [Testing](#Testing Music Genre Classifier)
   - [Training](#Training Music Genre Classifier)
+  - [Testing](#Testing Music Genre Classifier)
 - [STFT Layer Parameters](#STFT Layer Parameters)
 - [Prerequisites](#Prerequisites)
 
