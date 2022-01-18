@@ -51,6 +51,7 @@ class Classifier(nn.Module):
     def forward(self, x):
         x = self.stft(x)
         x = self.monochrome2RGB(x)
+        return self.resnet(x)
 
     @staticmethod
     def monochrome2RGB(tensor):
