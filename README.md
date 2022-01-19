@@ -37,7 +37,6 @@ The music classification task is based on a project done in the technion in 2021
 
 <img src="images/im1.png" height="200">
 
-
 # Results
 
 
@@ -74,14 +73,15 @@ Examples are shown in the Run-our-model section.
 # Run-our-model
 
 ## dataset
-You should load the  <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>,
-and put it under a data directory which you need to insert its path under the data_dir hyper-parameter.
+Our dataset is: <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>,
+Our code use pytorch dataset to load it. You can set the path to your data directory with the data_dir hyper-parameter.
 
 ## Chekpoints
 You should set the ckpt_dir parameter as the father checkpoints directory, and ckpt_file as the file name.
 For example, if you set the folowing parametrs as:
 `ckpt_dir = "checkpoints"`, `test_name = "my_test.pt"`, `ckpt_dir = "best_ckpt.pt"`,
 than the checkpoints file full path that will beloaded is: `\checkpoints\my_test\best_ckpt.pt`
+You can find some of our previuse checkpoints under the checkpoints folder.
 
 ## Training Music Genre Classifier
 To train our classifier network, run `train_env.py`.
