@@ -10,7 +10,7 @@
   "learn_kernels": 0,
   "batch_size": 16,
   "num_workers": 2,
-  "epoch_num": 2000,
+  "epoch_num": 1000,
   "learning_rate": 2e-3,
   "split_parts": 12,
   "gamma": 0.9995,

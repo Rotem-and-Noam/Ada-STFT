@@ -4,6 +4,7 @@ import torch
 import torch.nn.functional as F
 import random
 
+
 class GTZANDataset(Dataset):
     def __init__(self, torch_dataset, labels_list, vector_equlizer='padding',
                  mode="sample", parts=12, sample_rate=22050,
@@ -50,8 +51,11 @@ class GTZANDataset(Dataset):
 
     def __getitem__(self, index):
         if self.mode == "sample":  # sample one sample part
-            start = random.randrange(self.output_length - self.part_length - 1)
-            x, y = self.x[index][:, start:start + int(self.part_length)], self.y[index]
+            if self.part_length != self.output_length:
+                start = random.randrange(self.output_length - self.part_length - 1)
+                x, y = self.x[index][:, start:start + int(self.part_length)], self.y[index]
+            else:
+                x, y = self.x[index], self.y[index]
         elif self.mode == "split":  # return a regular sample
             x, y = self.x[index], self.y[index]
         else:
@@ -119,6 +123,7 @@ def get_augmentations():
         taa.RandomApply([taa.Delay(sample_rate=sr)], p=0.2),
     ])
     return augmentations
+
 
 if __name__ == '__main__':
     load_gtza_from_torch()

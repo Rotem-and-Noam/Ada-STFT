@@ -42,7 +42,9 @@ def objective(trial):
                                              optuna_env.show_confusion_matrix(confusion_matrix, val_accuracy),
                                              epoch)
 
-        print(f"{optuna_env.test_name}: epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
+        print(f"{optuna_env.test_name}: ",
+              f"params: split: {optuna_options['split_parts']}, opt: {optuna_options['optimizer_class']}, aug: {optuna_options['augmentation']}   "
+              f"epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
               f"train loss: {train_loss:.5f}",
               f"val loss: {val_loss:.5f}",
               f"learning rate: {optuna_env.optimizer.param_groups[0]['lr']:.6f}")
@@ -67,7 +69,7 @@ if __name__ == "__main__":
     sampler = optuna.samplers.TPESampler()
     study = optuna.create_study(study_name="AdaSTFT", direction="maximize", sampler=sampler,
                                 pruner=optuna.pruners.MedianPruner())
-    study.optimize(objective, n_trials=100, gc_after_trial=True, n_jobs=2)
+    study.optimize(objective, n_trials=100, gc_after_trial=True, n_jobs=4)
     pruned_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED]
     complete_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
 
