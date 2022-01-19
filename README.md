@@ -16,7 +16,7 @@
 - [Our-Model](#Our-Model) - about our project
 - [Results](#Results) - our results
 - [Hyper-parameters](#Hyper-parameters) - what are our training's hyperparameters
-- [Run-our-model](#Run-our-model) - how to run training jobs and inference with our model
+- [Run-our-model](#Run-our-model) - how to run training jobs and inference with our model and how to load checkpoints
 - [STFT-Moudle](#STFT-Moudle) - how to use our STFT layer
 - [Prerequisites](#Prerequisites) - Prerequisites of the environment
 
@@ -67,6 +67,12 @@ The music classification task is based on a project done in the technion in 2021
 
 # Run-our-model
 
+## Chekpoints
+You should set the ckpt_dir parameter as the father checkpoints directory, and ckpt_file as the file name.
+For example, if you set the folowing parametrs as:
+`ckpt_dir = "checkpoints"`, `test_name = "my_test.pt"`, `ckpt_dir = "best_ckpt.pt"`,
+than the checkpoints file full path that will beloaded is: `\checkpoints\my_test\best_ckpt.pt`
+
 ## Training Music Genre Classifier
 To train our classifier network, run `train_env.py`.
 ```cmd
@@ -80,12 +86,6 @@ python ./train_env.py --test_name run_learn_window --learn_window 1
 
 ## Inference Music Genre Classifier
 Run the `test.py` with the `test_name` argument set to the name of the model being inferenced.
-You should set the ckpt_dir parameter as the father checkpoints directory, and ckpt_file as the file name.
-For example, if you set the folowing parametrs as:
-`ckpt_dir = "checkpoints"`, `test_name = "my_test.pt"`, `ckpt_dir = "best_ckpt.pt"`,
-than the checkpoints file full path that will beloaded is: `\checkpoints\my_test\best_ckpt.pt`
-
-
 Setting the `test_name` argument can be done through `options.json` or through command line:
 ```cmd
 python ./test.py --test_name my_test --ckpt_dir checkpoints --ckpt_dir best_ckpt.pt
