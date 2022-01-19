@@ -30,9 +30,11 @@ class STFT(nn.Module):
     def forward(self, sample):
 
         if self.training and (self.win_cof.requires_grad or self.kernels.requires_grad):
+            # recalculate kernels for STFT calculation as window or DFT kernels might have changed
             self.real_kernels, self.imag_kernels = None, None
             real_kernels, imag_kernels = self._get_stft_kernels()
         else:
+            # remember kernels for STFT calculation as window or DFT kernels don't change
             if self.real_kernels is None or self.imag_kernels is None:
                 self.real_kernels, self.imag_kernels = self._get_stft_kernels()
             real_kernels, imag_kernels = self.real_kernels, self.imag_kernels
@@ -40,14 +42,10 @@ class STFT(nn.Module):
         sample = sample.reshape(sample.shape[0], 1, 1, -1)
 
         magn = F.conv2d(sample, real_kernels, stride=self.hop_length)
-        # phase = F.conv2d(sample, self.imag_kernels, stride=self.hop_length)
-
         magn = magn.permute(0, 2, 1, 3)
-        # phase = phase.permute(0, 2, 1, 3)
-
-        # complex conjugate
-        # phase = -1 * phase[:,:,:,:]
         magn = torch.abs(magn).squeeze(dim=0)
+
+        # apply transform to Mel scale or log if set
         if self.num_mels is not None:
             magn = self.apply_mel(magn, num_mels=self.num_mels)
         if self.log_base is not None:
@@ -72,12 +70,13 @@ class STFT(nn.Module):
 
 
     def _get_stft_kernels(self):
-
+        # real and imaginary kernel calculation from window and DFT kernel calculation
         kernels = self.kernels[:, np.newaxis, np.newaxis, :] * self.win_cof
 
         real_kernels = torch.real(kernels).float()
         imag_kernels = torch.imag(kernels).float()
-
+        # imaginary kernels are not used as we are not interested in the phase
+        # this is kept for future use
         return real_kernels, imag_kernels
 
     def apply_mel(self, stft, num_mels=128):
@@ -107,6 +106,7 @@ class STFT(nn.Module):
 
 
 if __name__ == "__main__":
+    # print audio spectrogram for visualization
     path = r"/home/tiras/adastft/dataset/genres/blues/blues.00029.wav"
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     array, sr = librosa.load(path, 22050)
