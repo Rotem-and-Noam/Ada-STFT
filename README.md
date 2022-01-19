@@ -119,5 +119,7 @@ python ./test.py --test_name my_test --ckpt_dir checkpoints --ckpt_dir best_ckpt
 |`tensorboard`| `2.7.0`|
 
 Credits:
+* Music Genre Classifier Project for classifier network architecture https://github.com/omercohen7640/MusicGenreClassifier
 * Animation by <a href="https://medium.com/@gumgumadvertisingblog">GumGum</a>.
+* STFT implemenation https://github.com/diggerdu/pytorch_audio
 
