@@ -74,8 +74,8 @@ Examples are shown in the Run-our-model section.
 # Run-our-model
 
 ## dataset
-You should load the  <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>,
-and put it under a data directory which you need to insert its path under the data_dir hyper-parameter.
+Our dataset is: <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>,
+Our code use pytorch dataset to load it. You can set the path to your data directory with the data_dir hyper-parameter.
 
 ## Chekpoints
 You should set the ckpt_dir parameter as the father checkpoints directory, and ckpt_file as the file name.
