@@ -37,7 +37,6 @@ The music classification task is based on a project done in the technion in 2021
 
 <img src="images/im1.png" height="200">
 
-
 # Results
 
 
@@ -82,6 +81,7 @@ You should set the ckpt_dir parameter as the father checkpoints directory, and c
 For example, if you set the folowing parametrs as:
 `ckpt_dir = "checkpoints"`, `test_name = "my_test.pt"`, `ckpt_dir = "best_ckpt.pt"`,
 than the checkpoints file full path that will beloaded is: `\checkpoints\my_test\best_ckpt.pt`
+You can find some of our previuse checkpoints under the checkpoints folder.
 
 ## Training Music Genre Classifier
 To train our classifier network, run `train_env.py`.
