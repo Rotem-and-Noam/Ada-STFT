@@ -65,7 +65,17 @@ The music classification task is based on a project done in the technion in 2021
 |three_widows| int | 0if you want to learn 1 stft, else if you want to earn 3 |
 |optimizer_class| string | optimizer type: "SGD" or "AdamW" |
 
+## changing hyper-parameters
+Parameters are automatically loaded from the options.json in the project directory.
+Changes to the parameters can be applied by changing the `options.json`.
+We also  implemented argparse library, so you can load your parameters with your IDE's configure or within th command line.
+Examples are shown in the Run-our-model section.
+
 # Run-our-model
+
+## dataset
+You should load the  <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>,
+and put it under a data directory which you need to insert its path under the data_dir hyper-parameter.
 
 ## Chekpoints
 You should set the ckpt_dir parameter as the father checkpoints directory, and ckpt_file as the file name.
