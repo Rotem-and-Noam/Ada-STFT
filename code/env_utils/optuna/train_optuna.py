@@ -1,13 +1,16 @@
 import optuna
-from train_env import *
+from ..train_env import *
 import json
+from ..check_points import LoadCkpt
+from torch.utils.tensorboard import SummaryWriter
+import os
 
 
 def objective(trial):
 
     # loading training options and hyper-parameters
-    with open("optuna_options.json", 'r') as fp:
-        optuna_options = json.load(fp)
+    with open("optuna_options.json", 'r') as fp1:
+        optuna_options = json.load(fp1)
 
     optuna_options['learning_rate'] = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
     optuna_options['optimizer_class'] = trial.suggest_categorical("optimizer", ["SGD", "AdamW"])
@@ -15,6 +18,10 @@ def objective(trial):
     optuna_options['augmentation'] = trial.suggest_categorical("augmentation", [0, 1])
     optuna_options['gamma'] = trial.suggest_float("gamma", 0.99, 1)
     optuna_options['test_name'] = optuna_options['test_name'] + str(trial.number)
+    optuna_options['check_points'] = os.path.join(optuna_options['check_points'] + optuna_options['test_name'])
+
+    with open(os.path.join("logs", f"options_optuna{str(trial.number)}.json"), 'w') as fp2:
+        json.dump(optuna_options, fp2)
 
     print(f"Starting test: {optuna_options['test_name']}")
 

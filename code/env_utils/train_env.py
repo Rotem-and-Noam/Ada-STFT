@@ -1,19 +1,24 @@
 import numpy as np
-from tqdm import tqdm
 import matplotlib.pyplot as plt
-from torch.utils.tensorboard import SummaryWriter
-from check_points import *
 from get_components import *
-from options_parser import get_options
 
 
 class Env:
+    """"
+    The entire deep learning environment of our training and testing.
+    This class initiates all the needed parameters for test, train and val modes.
+    Have functions to train, test and validate our data, and some visualizations functions:
+    we use tensorboard and matplotlib in order to keep track on our training trials.
+    """
 
     def __init__(self, batch_size, num_workers, epoch_num, learning_rate, gamma,
                  data_dir, ckpt, ckpt_interval, options, writer=None, load_resnet_weight_path=None,
                  split_parts=1, learn_window=0, learn_kernels=0, cpu=False, augmentation=False, three_windows=0,
                  optimizer_class="AdamW", test_name=None, **kwargs):
+
         self.genres = ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock', 'blues']
+
+        # initialise data loaders
         self.train_data = get_dataloader(mode='train', data_dir=data_dir, genres=self.genres,
                                          batch_size=batch_size, num_workers=num_workers, parts=split_parts,
                                          augmentation=augmentation)
@@ -21,17 +26,25 @@ class Env:
                                        batch_size=batch_size, num_workers=num_workers, parts=split_parts)
         self.test_data = get_dataloader(mode='test', data_dir=data_dir, genres=self.genres,
                                         batch_size=batch_size, num_workers=num_workers, parts=split_parts)
-        self.batch_size = batch_size
         self.data_length = len(self.train_data)
+
+        # initialise tensorboard log dir
         self.writer = writer
+
+        # initialise device
         if not cpu:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         else:
             self.device = torch.device('cpu')
+
+        # initialise training modules: model's network, optimizer method and loss function (criterion)
         self.model = get_model(self.device, ckpt, three_windows, load_resnet_weight_path)
         self.optimizer, self.scheduler = get_optimizer(self.model, learning_rate, gamma, ckpt, optimizer_class)
         self.criterion = torch.nn.CrossEntropyLoss()
+
+        # set hyper-parameters
         self.split_parts = split_parts
+        self.batch_size = batch_size
         self.epoch_num = epoch_num
         self.start_epoch = ckpt.start_epoch
         self.class_number = len(self.genres)
@@ -39,6 +52,8 @@ class Env:
         self.ckpt = ckpt
         self.ckpt_interval = ckpt_interval
         self.three_windows = three_windows
+
+        # if we want to learn stft window or kernels DFT coefficients, set it
         if learn_window:
             self.model.stft.learn_window()
             if self.three_windows:
@@ -50,6 +65,8 @@ class Env:
                 self.model.stft1.learn_kernels()
                 self.model.stft2.learn_kernels()
         self.model.stft.print_learnable_params()
+
+        # report and set the trial's parameters
         self.test_name = test_name
         print(f"Learnable parameters {self.count_parameters(self.model)}")
         print(f"Starting training on device {str(self.device)} for {str(self.epoch_num)} epochs")
@@ -58,23 +75,27 @@ class Env:
     def train(self):
         for epoch in range(self.start_epoch, self.epoch_num):
 
+            # train rpoch
             train_loss = self.train_epoch()
+            # compute accuracy
             val_accuracy, confusion_matrix, val_loss = self.calculate_accuracy_and_loss()
 
+            # keep track of the best accuracy so far
             if val_accuracy > self.best_acc:
                 self.best_acc = val_accuracy
                 self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options, True)
-                if writer is not None:
+                if self.writer is not None:
                     self.writer.add_figure('best confusion matrix', self.show_confusion_matrix(confusion_matrix, val_accuracy),
                                            epoch)
 
+            # report our current status
             print(f"{self.test_name}: epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
                   f"train loss: {train_loss:.5f}",
                   f"val loss: {val_loss:.5f}",
                   f"learning rate: {self.optimizer.param_groups[0]['lr']:.6f}")
 
             # send documentation to tensorboard
-            if writer is not None:
+            if self.writer is not None:
                 self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
             # save check points
             if epoch % self.ckpt_interval == self.ckpt_interval - 1:
@@ -82,9 +103,11 @@ class Env:
 
     @staticmethod
     def count_parameters(model):
+        # count our model's parameters
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     def tensorboard_logging(self, confusion_matrix, train_loss, val_loss, val_accuracy, epoch):
+        # save some values to be recorded in tensorboard
         self.writer.add_scalar('Loss/train', train_loss, epoch)
         self.writer.add_scalar('Loss/val', val_loss, epoch)
         self.writer.add_scalar('Accuracy/val', val_accuracy, epoch)
@@ -104,6 +127,7 @@ class Env:
                                        epoch)
 
     def show_confusion_matrix(self, confusion_matrix, accuracy, show=False):
+        # create plot of confusion matrix
         if show:
             plt.close()
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
@@ -118,7 +142,9 @@ class Env:
             plt.show()
         return fig
 
-    def show_window(self, window):
+    @staticmethod
+    def show_window(window):
+        # show a figure of the window used in the stft computations
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         ax.stem(window)
         ax.set_title("Window Coefficients")
@@ -151,12 +177,15 @@ class Env:
         return train_loss
 
     def calculate_accuracy_and_loss(self, data_type='val'):
+
+        # initialise parameters
         self.model.eval()
         correct_total = 0
         samples_total = 0
         loss_total = 0
         confusion_matrix = np.zeros([self.class_number, self.class_number], int)
 
+        # pick the right data to compute accuracy for
         if data_type == 'val':
             data = self.val_data
         elif data_type == 'test':
@@ -171,15 +200,20 @@ class Env:
             for images, labels in data:
                 image = images.to(self.device)
                 labels = labels.to(self.device)
-                image_splited = image.reshape(image.shape[0] * self.split_parts, 1, -1)
-                label_splited = labels.repeat(self.split_parts, 1).T.reshape(-1)
-                outputs = self.model(image_splited)
-                loss = self.criterion(outputs, label_splited)
+                # split images
+                image_split = image.reshape(image.shape[0] * self.split_parts, 1, -1)
+                label_split = labels.repeat(self.split_parts, 1).T.reshape(-1)
+                outputs = self.model(image_split)
+                # compute loss
+                loss = self.criterion(outputs, label_split)
                 loss_total += loss.item() * len(labels)
+                # compute predictions
                 _, predictions = torch.max(outputs.data, 1)
                 prediction, _ = torch.mode(predictions)
                 samples_total += labels.size(0)
-                correct_total += (prediction == labels).sum().item()
+                # compute values for accuracy computations
+                indicator = (prediction == labels)*1
+                correct_total += np.sum(indicator).item()
                 confusion_matrix[labels.item(), prediction.item()] += 1
 
         # calculating mean accuracy and mean loss of the test set
@@ -192,29 +226,3 @@ class Env:
         test_accuracy, confusion_matrix, test_loss = self.calculate_accuracy_and_loss(data_type='test')
         print(f"test accuracy: {100 * test_accuracy:.4f}%",
               f"test loss: {test_loss:.4f}")
-
-
-if __name__ == "__main__":
-
-    # loading training options and hyper-parameters
-    options = vars(get_options().parse_args())
-    options["ckpt_dir"] = os.path.join(options["ckpt_dir"], options['test_name'])
-
-    print(f"Starting test: {options['test_name']}")
-
-    # check if need to load check points
-    ckpt = LoadCkpt(**options)
-    if ckpt.start_epoch >= options['epoch_num']:
-        print('This test is already done!')
-
-    else:
-        # tensorboard initialising
-        tensorboard_path = os.path.join(options['tensorboard_dir'], options['test_name'])
-        writer = SummaryWriter(log_dir=tensorboard_path)
-
-        # train
-        env = Env(writer=writer, ckpt=ckpt, options=options, **options)
-        # env.calculate_accuracy_and_loss('val')
-        env.train()
-
-        print("done training! Deep Learning Rules!")

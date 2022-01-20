@@ -30,10 +30,12 @@ class Classifier(nn.Module):
         # if not self.training:
         #    x = x.reshape(x.shape[0] * self.split_parts, 1, -1)
         if not self.three_windows:
+            # stack 3 exact spectrogram
             x = self.stft(x)
             x = self.resize_array(x)
             x = self.monochrome2RGB(x)
         else:
+            # stack 3 different spectrograms (if learnable)
             R = self.stft(x)
             R = self.resize_array(R)
             G = self.stft1(x)

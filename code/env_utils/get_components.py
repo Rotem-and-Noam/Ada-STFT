@@ -1,6 +1,6 @@
 import torchaudio
 import torch
-from DataManager_1D import GTZANDataset
+from code.data_utils.DataManager_1D import GTZANDataset
 from model import Classifier
 
 
