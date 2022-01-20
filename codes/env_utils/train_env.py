@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from codes.env_utils.get_components import *
+import torch
+from env_utils.get_components import *
 
 
 class Env:
@@ -212,8 +213,8 @@ class Env:
                 prediction, _ = torch.mode(predictions)
                 samples_total += labels.size(0)
                 # compute values for accuracy computations
-                indicator = (prediction == labels)*1
-                correct_total += np.sum(indicator).item()
+                indicator = (prediction == labels).long()
+                correct_total += torch.sum(indicator).item()
                 confusion_matrix[labels.item(), prediction.item()] += 1
 
         # calculating mean accuracy and mean loss of the test set

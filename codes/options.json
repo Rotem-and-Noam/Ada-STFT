@@ -1,5 +1,5 @@
 {
-  "test_name": "run_basic",
+  "test_name": "run_debug",
   "resume": 100,
   "ckpt_interval": 1,
   "tensorboard_dir": "../tensorboard/new2",
@@ -17,5 +17,5 @@
   "cpu": 0,
   "augmentation": 0,
   "three_widows": 0,
-  "optimizer_class": "AdamW",
+  "optimizer_class": "AdamW"
 }

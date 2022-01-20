@@ -1,7 +1,7 @@
 import optuna
-from codes.env_utils.train_env import Env
+from env_utils.train_env import Env
 import json
-from codes.env_utils.check_points import LoadCkpt
+from env_utils.check_points import LoadCkpt
 from torch.utils.tensorboard import SummaryWriter
 import os
 import matplotlib.pyplot as plt
@@ -21,7 +21,8 @@ def objective(trial):
     optuna_options['test_name'] = optuna_options['test_name'] + str(trial.number)
     optuna_options['ckpt_dir'] = os.path.join(optuna_options['ckpt_dir'] + optuna_options['test_name'])
 
-    with open(os.path.join("logs", f"options_optuna{str(trial.number)}.json"), 'w') as fp2:
+    os.makedirs(os.path.join("env_utils", "optuna", "logs"), exist_ok=True)
+    with open(os.path.join("env_utils", "optuna", "logs", f"options_optuna{str(trial.number)}.json"), 'w') as fp2:
         json.dump(optuna_options, fp2)
 
     print(f"Starting test: {optuna_options['test_name']}")
