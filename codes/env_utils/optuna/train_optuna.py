@@ -4,6 +4,7 @@ import json
 from codes.env_utils.check_points import LoadCkpt
 from torch.utils.tensorboard import SummaryWriter
 import os
+import matplotlib.pyplot as plt
 
 
 def objective(trial):
@@ -18,7 +19,7 @@ def objective(trial):
     optuna_options['augmentation'] = trial.suggest_categorical("augmentation", [0, 1])
     optuna_options['gamma'] = trial.suggest_float("gamma", 0.99, 1)
     optuna_options['test_name'] = optuna_options['test_name'] + str(trial.number)
-    optuna_options['check_points'] = os.path.join(optuna_options['check_points'] + optuna_options['test_name'])
+    optuna_options['ckpt_dir'] = os.path.join(optuna_options['ckpt_dir'] + optuna_options['test_name'])
 
     with open(os.path.join("logs", f"options_optuna{str(trial.number)}.json"), 'w') as fp2:
         json.dump(optuna_options, fp2)
@@ -43,14 +44,16 @@ def objective(trial):
 
         if val_accuracy > optuna_env.best_acc:
             optuna_env.best_acc = val_accuracy
-            optuna_env.ckpt.save_ckpt(optuna_env.model, optuna_env.optimizer, optuna_env.scheduler, epoch, optuna_env.options, True)
+            optuna_env.ckpt.save_ckpt(optuna_env.model, optuna_env.optimizer, optuna_env.scheduler,
+                                      epoch, optuna_env.options, True)
             if optuna_env.writer is not None:
                 optuna_env.writer.add_figure('best confusion matrix',
                                              optuna_env.show_confusion_matrix(confusion_matrix, val_accuracy),
                                              epoch)
 
         print(f"{optuna_env.test_name}: ",
-              f"params: split: {optuna_options['split_parts']}, opt: {optuna_options['optimizer_class']}, aug: {optuna_options['augmentation']}   "
+              f"params: split: {optuna_options['split_parts']}, opt: {optuna_options['optimizer_class']},"
+              f"aug: {optuna_options['augmentation']}   "
               f"epoch #{epoch}, val accuracy: {100 * val_accuracy:.4f}%",
               f"train loss: {train_loss:.5f}",
               f"val loss: {val_loss:.5f}",
@@ -61,7 +64,8 @@ def objective(trial):
             optuna_env.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
         # save check points
         if epoch % optuna_env.ckpt_interval == optuna_env.ckpt_interval - 1:
-            optuna_env.ckpt.save_ckpt(optuna_env.model, optuna_env.optimizer, optuna_env.scheduler, epoch, optuna_env.options)
+            optuna_env.ckpt.save_ckpt(optuna_env.model, optuna_env.optimizer, optuna_env.scheduler,
+                                      epoch, optuna_env.options)
 
         trial.report(val_accuracy, epoch)
 

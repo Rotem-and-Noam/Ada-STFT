@@ -1,4 +1,4 @@
-from code.env_utils.train_env import *
+from codes.env_utils.train_env import *
 
 if __name__ == "__main__":
 
