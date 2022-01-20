@@ -1,7 +1,7 @@
 import optuna
-from code.env_utils.train_env import Env
+from codes.env_utils.train_env import Env
 import json
-from code.env_utils.check_points import LoadCkpt
+from codes.env_utils.check_points import LoadCkpt
 from torch.utils.tensorboard import SummaryWriter
 import os
 

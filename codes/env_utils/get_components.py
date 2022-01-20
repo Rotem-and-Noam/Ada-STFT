@@ -1,7 +1,7 @@
 import torchaudio
 import torch
-from code.data_utils.DataManager_1D import GTZANDataset
-from code.models.model import Classifier
+from codes.data_utils.DataManager_1D import GTZANDataset
+from codes.models.model import Classifier
 
 
 def get_dataloader(mode, data_dir, genres, batch_size, num_workers, parts, augmentation=False):

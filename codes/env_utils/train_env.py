@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from get_components import *
+from codes.env_utils.get_components import *
 
 
 class Env:

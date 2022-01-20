@@ -2,8 +2,8 @@ import librosa
 import numpy as np
 import torch
 from torch import nn
-from resnet_dropout import *
-from stft import STFT
+from codes.models.resnet_dropout import *
+from codes.models.stft import STFT
 
 
 class Classifier(nn.Module):
