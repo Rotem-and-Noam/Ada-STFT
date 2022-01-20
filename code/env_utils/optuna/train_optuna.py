@@ -1,5 +1,5 @@
 import optuna
-from ..train_env import *
+from ..train_env import Env
 import json
 from ..check_points import LoadCkpt
 from torch.utils.tensorboard import SummaryWriter
