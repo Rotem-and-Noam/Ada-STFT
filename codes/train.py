@@ -1,4 +1,4 @@
-from code.env_utils.train_env import Env
+from codes.env_utils.train_env import Env
 from torch.utils.tensorboard import SummaryWriter
 from env_utils.check_points import *
 from env_utils.options_parser import get_options
