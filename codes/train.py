@@ -9,7 +9,8 @@ if __name__ == "__main__":
     options = vars(get_options().parse_args())
     options["ckpt_dir"] = os.path.join(options["ckpt_dir"], options['test_name'])
 
-    print(f"Starting test: {options['test_name']}")
+    print(f"options:")
+    [print(key, ':', value) for key, value in options.items()]
 
     # check if need to load check points
     ckpt = LoadCkpt(**options)

@@ -213,7 +213,7 @@ class Env:
                 prediction, _ = torch.mode(predictions)
                 samples_total += labels.size(0)
                 # compute values for accuracy computations
-                indicator = (prediction == labels).long()
+                indicator = (prediction == labels)
                 correct_total += torch.sum(indicator).item()
                 confusion_matrix[labels.item(), prediction.item()] += 1
 

@@ -19,10 +19,11 @@ def objective(trial):
     optuna_options['augmentation'] = trial.suggest_categorical("augmentation", [0, 1])
     optuna_options['gamma'] = trial.suggest_float("gamma", 0.99, 1)
     optuna_options['test_name'] = optuna_options['test_name'] + str(trial.number)
-    optuna_options['ckpt_dir'] = os.path.join(optuna_options['ckpt_dir'] + optuna_options['test_name'])
+    optuna_options['ckpt_dir'] = os.path.join(optuna_options['ckpt_dir'], optuna_options['test_name'])
 
-    os.makedirs(os.path.join("env_utils", "optuna", "logs"), exist_ok=True)
-    with open(os.path.join("env_utils", "optuna", "logs", f"options_optuna{str(trial.number)}.json"), 'w') as fp2:
+    log_dir_path = "optuna_logs"
+    os.makedirs(log_dir_path, exist_ok=True)
+    with open(os.path.join(log_dir_path, f"options_optuna{str(trial.number)}.json"), 'w') as fp2:
         json.dump(optuna_options, fp2)
 
     print(f"Starting test: {optuna_options['test_name']}")

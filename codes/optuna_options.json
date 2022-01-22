@@ -1,8 +1,8 @@
 {
   "test_name": "optuna",
   "resume": 0,
-  "ckpt_interval": 100,
-  "tensorboard_dir": "../tensorboard/optuna2",
+  "ckpt_interval": 25,
+  "tensorboard_dir": "../tensorboard/optuna3",
   "data_dir": "../dataset",
   "ckpt_dir": "../checkpoints_optuna",
   "ckpt_file": "best_file.pt",
