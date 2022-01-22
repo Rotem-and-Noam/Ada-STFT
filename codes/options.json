@@ -1,10 +1,10 @@
 {
-  "test_name": "run",
+  "test_name": "basic",
   "resume": 1,
   "ckpt_interval": 50,
-  "tensorboard_dir": "../tensorboard/new5",
+  "tensorboard_dir": "../tensorboard/new6",
   "data_dir": "../dataset",
-  "ckpt_dir": "../checkpoints5",
+  "ckpt_dir": "../checkpoints6",
   "ckpt_file": "best_file.pt",
   "learn_window": 0,
   "learn_kernels": 0,

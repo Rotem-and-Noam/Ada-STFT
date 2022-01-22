@@ -49,8 +49,10 @@ class LoadCkpt:
     def _load_start_epoch(self):
         return self._ckpt_dict['epoch'] + 1
 
-    def load_scheduler(self):
-        return self._ckpt_dict['scheduler']
+    def load_scheduler(self, scheduler):
+        _scheduler = scheduler
+        _scheduler.load_state_dict(self._ckpt_dict['scheduler'].state_dict())
+        return _scheduler
 
     def load_options(self):
         return self._ckpt_dict['options']

@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 from env_utils.get_components import *
+from tqdm import tqdm
 
 
 class Env:
@@ -155,21 +156,23 @@ class Env:
         self.model.train()
         train_epoch_loss = 0
         samples_total = 0
-        for j, sample in enumerate(self.train_data):
-            waveforms, labels = sample
+        with tqdm(total=self.data_length) as pbar:
+            for j, sample in enumerate(self.train_data):
+                waveforms, labels = sample
 
-            # getting batch output and calculating batch loss
-            output = self.model(waveforms.to(self.device))
-            loss = self.criterion(output, labels.to(self.device))
+                # getting batch output and calculating batch loss
+                output = self.model(waveforms.to(self.device))
+                loss = self.criterion(output, labels.to(self.device))
 
-            # the three musketeers:
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+                # the three musketeers:
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
 
-            # updating parameters for calculating total loss
-            train_epoch_loss += loss.detach().item() * labels.size(0)
-            samples_total += labels.size(0)
+                # updating parameters for calculating total loss
+                train_epoch_loss += loss.detach().item() * labels.size(0)
+                samples_total += labels.size(0)
+                pbar.update()
 
         # calculating mean train loss for epoch
         train_loss = train_epoch_loss / samples_total
