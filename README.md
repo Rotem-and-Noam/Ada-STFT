@@ -34,7 +34,7 @@ The music classification task is based on a project done in the technion in 2021
 
 <img src="images/model.png" height="200">
 
-A complete and detailed report of the project can be found <a href=https://github.com/Rotem-and-Noam/Ada-STFT/blob/main/Ada-STFT.pdf>here</a>
+A complete and detailed report of the project can be found <a href=https://github.com/Rotem-and-Noam/Ada-STFT/blob/main/Ada_STFT.pdf>here</a>
 
 # Training and Results
 
