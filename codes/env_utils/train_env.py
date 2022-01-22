@@ -71,10 +71,12 @@ class Env:
         # report and set the trial's parameters
         self.test_name = test_name
         print(f"Learnable parameters {self.count_parameters(self.model)}")
-        print(f"Starting training on device {str(self.device)} for {str(self.epoch_num)} epochs")
         self.best_acc = 0.5
 
     def train(self):
+
+        print(f"Starting training on device {str(self.device)} for {str(self.epoch_num)} epochs")
+
         for epoch in range(self.start_epoch, self.epoch_num):
 
             # train rpoch
@@ -85,7 +87,7 @@ class Env:
             # keep track of the best accuracy so far
             if val_accuracy >= self.best_acc:
                 self.best_acc = val_accuracy
-                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options, True)
+                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options, True, True)
                 if self.writer is not None:
                     self.writer.add_figure('best confusion matrix', self.show_confusion_matrix(confusion_matrix, val_accuracy),
                                            epoch)
@@ -231,8 +233,3 @@ class Env:
         loss_total = loss_total / samples_total
 
         return model_accuracy, confusion_matrix, loss_total
-
-    def test(self):
-        test_accuracy, confusion_matrix, test_loss = self.calculate_accuracy_and_loss(data_type='test')
-        print(f"test accuracy: {100 * test_accuracy:.4f}%",
-              f"test loss: {test_loss:.4f}")

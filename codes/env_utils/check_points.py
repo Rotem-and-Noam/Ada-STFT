@@ -4,7 +4,7 @@ import os
 
 class LoadCkpt:
 
-    def __init__(self, ckpt_dir, resume, ckpt_file, **kwargs):
+    def __init__(self, ckpt_dir, resume, ckpt_file, test=False, **kwargs):
         self._dir = ckpt_dir
         os.makedirs(ckpt_dir, exist_ok=True)
         self._last_file = 'ckpt_last.pt'
@@ -12,17 +12,18 @@ class LoadCkpt:
         self._ckpt_file = ckpt_file
         self._ckpt_dict = None
         self.resume = resume
+        self.test = test
         if resume:
             self._ckpt_dict = self._load_ckpt()
         self.start_epoch = 0
         if self._ckpt_dict is not None:
             self.start_epoch = self._load_start_epoch()
-            print(f"loaded check points, starting from epoch: {self.start_epoch}")
+            print(f"loaded check points from epoch: {self.start_epoch}")
 
     def _load_ckpt(self):
         if self.resume:
             file = self._last_file
-        else:
+        if self.test:
             file = self._ckpt_file
         path = os.path.join(self._dir, file)
         if not os.path.isfile(path):

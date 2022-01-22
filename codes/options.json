@@ -1,11 +1,11 @@
 {
-  "test_name": "basic",
+  "test_name": "learn_3_kernels",
   "resume": 1,
   "ckpt_interval": 50,
   "tensorboard_dir": "../tensorboard/final",
   "data_dir": "../dataset",
   "ckpt_dir": "../checkpoints_final",
-  "ckpt_file": "best_file.pt",
+  "ckpt_file": "ckpt_best.pt",
   "learn_window": 0,
   "learn_kernels": 0,
   "batch_size": 16,
