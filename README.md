@@ -1,4 +1,4 @@
-# Adaptive STFT: Classify Music Genres with a learnable spectrogram layer
+<center> <h1>Adaptive STFT: Classify Music Genres with a learnable spectrogram layer</h1> </center>
 <h2 align="center">
   <br>
  Our final project for the Technion's EE Deep Learning course (046211)
