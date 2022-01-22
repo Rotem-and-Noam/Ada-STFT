@@ -83,11 +83,17 @@ class Env:
             val_accuracy, confusion_matrix, val_loss = self.calculate_accuracy_and_loss()
 
             # keep track of the best accuracy so far
-            if val_accuracy > self.best_acc:
+            if val_accuracy >= self.best_acc:
                 self.best_acc = val_accuracy
                 self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options, True)
                 if self.writer is not None:
                     self.writer.add_figure('best confusion matrix', self.show_confusion_matrix(confusion_matrix, val_accuracy),
+                                           epoch)
+            elif val_accuracy >= self.best_acc - 0.03 and val_accuracy >= 0.56 and epoch >= 0.6 * self.epoch_num:
+                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options, False, True)
+                if self.writer is not None:
+                    self.writer.add_figure('confusion matrix',
+                                           self.show_confusion_matrix(confusion_matrix, val_accuracy),
                                            epoch)
 
             # report our current status
@@ -101,7 +107,7 @@ class Env:
                 self.tensorboard_logging(confusion_matrix, train_loss, val_loss, val_accuracy, epoch)
             # save check points
             if epoch % self.ckpt_interval == self.ckpt_interval - 1:
-                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options)
+                self.ckpt.save_ckpt(self.model, self.optimizer, self.scheduler, epoch, self.options, False, True)
 
     @staticmethod
     def count_parameters(model):
@@ -115,7 +121,7 @@ class Env:
         self.writer.add_scalar('Accuracy/val', val_accuracy, epoch)
         self.writer.add_scalar('Window Change', self.model.stft.calc_window_change().item(), epoch)
         self.writer.add_scalar('Kernel Change', self.model.stft.calc_kernels_change().item(), epoch)
-        if epoch % self.ckpt_interval == 0:
+        if epoch % self.ckpt_interval == self.ckpt_interval - 1:
             self.writer.add_figure('confusion matrix', self.show_confusion_matrix(confusion_matrix, val_accuracy), epoch)
             self.writer.add_figure('Window',
                                    self.show_window(self.model.stft.win_cof.detach().clone().squeeze(0).cpu().numpy()),
@@ -216,7 +222,7 @@ class Env:
                 prediction, _ = torch.mode(predictions)
                 samples_total += labels.size(0)
                 # compute values for accuracy computations
-                indicator = (prediction == labels)
+                indicator = (prediction == labels).long()
                 correct_total += torch.sum(indicator).item()
                 confusion_matrix[labels.item(), prediction.item()] += 1
 

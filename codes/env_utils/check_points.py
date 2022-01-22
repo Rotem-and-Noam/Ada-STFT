@@ -57,7 +57,7 @@ class LoadCkpt:
     def load_options(self):
         return self._ckpt_dict['options']
 
-    def save_ckpt(self, model, optimizer, scheduler, epoch, options, best=False):
+    def save_ckpt(self, model, optimizer, scheduler, epoch, options, best=False, save_ckpt=False):
         ckpt_dict = {
             'epoch': epoch,
             'state_dict': model.state_dict(),
@@ -66,7 +66,8 @@ class LoadCkpt:
             'options': options
         }
 
-        if not best:
-            torch.save(ckpt_dict, os.path.join(self._dir, self._last_file))
-        else:
+        torch.save(ckpt_dict, os.path.join(self._dir, self._last_file))
+        if best:
             torch.save(ckpt_dict, os.path.join(self._dir, self._best_file))
+        if save_ckpt:
+            torch.save(ckpt_dict, os.path.join(self._dir, f"ckpt_epoch_{epoch}.pt"))
