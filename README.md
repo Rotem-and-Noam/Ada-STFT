@@ -13,10 +13,10 @@
 
 ## Agenda
 - [Ada-STFT](#Ada-STFT) - about our project
-- [Training and Results](#Training%20and%20Results) - our results
-- [Hyper-parameters](#Hyper-parameters) - what are our training's hyperparameters
-- [Run our model](#Run%20our%20model) - how to run training jobs and inference with our model and how to load checkpoints
-- [Ada-STFT Module](#Ada-STFT Module) - how to use our STFT layer
+- [Training and Results](#training-and-results) - our network's training visualizations and results
+- [Hyper-parameters](#hyper-parameters) - what are our training's hyperparameters
+- [Run our model](#run-our-model) - how to run training jobs and inference with our model and how to load checkpoints
+- [Ada-STFT Module](#ada-stft-module) - how to use our STFT layer
 - [Prerequisites](#Prerequisites) - Prerequisites of the environment
 
 # Ada-STFT
