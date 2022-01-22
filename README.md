@@ -16,7 +16,7 @@
 - [Training and Results](#training-and-results) - our network's training visualizations and results
 - [Hyper-parameters](#hyper-parameters) - what are our training's hyperparameters
 - [Run our model](#run-our-model) - how to run training jobs and inference with our model and how to load checkpoints
-- [Ada-STFT Module](#ada-stft-module) - how to use our STFT layer
+- [Ada-STFT Module](#ada-stft-module) - how to use our STFT module
 - [Prerequisites](#Prerequisites) - Prerequisites of the environment
 
 # Ada-STFT
@@ -68,19 +68,20 @@ As we can see, out of the following 3 combinations:
 2. learning the STFT DFT kernel coefficients
 3. learning both the DFT kernel coefficients and window coefficients
 It appears that learning both the DFT kernel coefficients and window coefficients together has the best performance.
-Surprisingly, it seems that learning 3 different STFT modules (one for each of Resnet's input channels), rather then learning 1 STFT module, does not improve the performance; it performs slightly better or slightly worse, depending on the trial combination.
+Surprisingly, it seems that learning 3 different STFT modules (one for each of Resnet's input channels) does not improve the performance over learning 1 STFT module;
+It performs slightly better or slightly worse, depending on the trial configuration and chance.
 
 # Run our model
 
 ## Dataset
 Our dataset is: <a href="https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification/code">GTZAN dataset </a>,
-Our code use pytorch dataset to load it. You can set the path to your data directory with the data_dir hyper-parameter.
+Our code uses `torchaudio` dataset to load it. You can set the path to your data directory with the data_dir argument.
 
 ## Chekpoints
 You should set the ckpt_dir parameter as the father checkpoints directory, and ckpt_file as the file name.
-For example, if you set the folowing parametrs as:
+For example, if you set the following parameters as:
 `ckpt_dir = "checkpoints"`, `test_name = "my_test.pt"`, `ckpt_dir = "best_ckpt.pt"`,
-than the checkpoints file full path that will beloaded is: `\checkpoints\my_test\best_ckpt.pt`
+The full checkpoints file path that will be loaded is: `\checkpoints\my_test\best_ckpt.pt`
 
 ## Training Music Genre Classifier
 To train our classifier network, run `train_env.py`.
@@ -94,7 +95,7 @@ python ./train_env.py --test_name run_learn_window --learn_window 1
 ```
 
 ## Inference Music Genre Classifier
-Run the `test.py` with the `test_name` argument set to the name of the model being inferenced.
+Run the `test.py` with the `test_name` argument set to the name of the model used for inference.
 Setting the `test_name` argument can be done through `options.json` or through command line:
 ```cmd
 python ./test.py --test_name my_test --ckpt_dir checkpoints --ckpt_dir best_ckpt.pt
@@ -105,23 +106,23 @@ python ./test.py --test_name my_test --ckpt_dir checkpoints --ckpt_dir best_ckpt
 |Parameter | Type | Description |
 |-------|------|---------------|
 |test_name| string | your trial's name|
-|resume| int | 0 if we start a new training and 1 if we resume old training|
+|resume| int | 0 if we start a new training run and 1 if we resume old training|
 |ckpt_interval| int | epoch interval to save a new checkpoint |
 |tensorboard_dir| string | path to tensorboard log directory |
 |data_dir| string | path to dataset directory |
 |ckpt_dir| string | path to checkpoint directory |
 |ckpt_file| string | path to ckpt file to be loaded |
-|learn_window| int | 0 if we don't won't to learn stft window coefficients, 1 if we do |
-|learn_kernels| int | 0 if we don't won't to learn stft kernels coefficients, 1 if we do |
+|learn_window| int | 1 to learn stft window coefficients, 0 not to |
+|learn_kernels| int | 1 to learn stft kernels coefficients, 0 not to |
 |batch_size| int | size of batch |
 |num_workers| int | data loader's parameters: number of workers to pre-fetch the data |
 |epoch_num| int | number of total epoches to run |
-|learning_rate| int | optimizer's learning rate |
-|split_parts| int | to how many parts to split our original audio file. can be: 1, 3, 4, 6, 12|
+|learning_rate| int | initial optimizer's learning rate |
+|split_parts| int | how many parts to split our original audio file to. can be: 1, 3, 4, 6, 12|
 |gamma| int | scheduler's gamma |
 |cpu| int | 0 if we want to try and run on gpu, else if we want to run on cpu |
 |augmentation | int | 0 if we don't want to use augmentation, else if we do |
-|three_widows| int | 0if you want to learn 1 stft, else if you want to earn 3 |
+|three_widows| int | 0 to use 1 STFT in classifier (greyscale), else for 3 STFT modules in classifier (RGB) |
 |optimizer_class| string | optimizer type: "SGD" or "AdamW" |
 
 ## Changing hyper-parameters
