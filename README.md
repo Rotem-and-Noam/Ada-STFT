@@ -19,6 +19,7 @@
 - [Run-our-model](#Run-our-model) - how to run training jobs and inference with our model and how to load checkpoints
 - [STFT-Moudle](#STFT-Moudle) - how to use our STFT layer
 - [Prerequisites](#Prerequisites) - Prerequisites of the environment
+- [Our-Results](#Our-Results) - Describe our training and results
 
 # Ada-STFT
 Expanding on existing application of image processing networks to audio using STFT, we propose an adaptive STFT layer that learns the best DFT kernel coefficients and window coefficients for the application. 
@@ -35,7 +36,7 @@ The music classification task is based on a project done in the technion in 2021
 
 # Our-Model
 
-<img src="images/im1.png" height="200">
+<img src="images/model.png" height="200">
 
 # Results
 
@@ -81,7 +82,6 @@ You should set the ckpt_dir parameter as the father checkpoints directory, and c
 For example, if you set the folowing parametrs as:
 `ckpt_dir = "checkpoints"`, `test_name = "my_test.pt"`, `ckpt_dir = "best_ckpt.pt"`,
 than the checkpoints file full path that will beloaded is: `\checkpoints\my_test\best_ckpt.pt`
-You can find some of our previuse checkpoints under the checkpoints folder.
 
 ## Training Music Genre Classifier
 To train our classifier network, run `train_env.py`.
@@ -89,7 +89,7 @@ To train our classifier network, run `train_env.py`.
 python ./train_env.py --test_name run_basic
 ```
 training job parameters are automatically loaded from the options.json in the project directory.
-Changes to the parameters can be applied by changing the `options.json` or running with command line arguments, for example:
+Changes to the parameters can be applied by changing the `codes\options.json` or running with command line arguments, for example:
 ```cmd
 python ./train_env.py --test_name run_learn_window --learn_window 1
 ```
@@ -137,6 +137,39 @@ class Classifier(nn.Module):
 | log_base | base of log to apply  to STFT, None for no log|
 | learn_window | should window be learned (can be set after layer initialization)|
 | learn_kernels | should DFT kernel be learned (can be set after layer initialization)|
+
+# Our-Training-and-Results
+
+We used Optuna to pick our hyperparameters for basic run with no learnable STFT's coefficiens. Those parameters are saved in the `codes\options.json` file.
+You can use our code `codes\train_optuna.py` and change it if you would like to preform your own Optuna study.
+
+With those parameters, we conducted the folowing trials:
+
+\begin{enumerate}
+    \item basic run, with no STFT learning
+    \item learning the STFT's window coefficients
+    \item learning the STFT's DFT's kernel coefficients
+    \item learning both the DFT's kernel coefficients and window coefficients
+    \item learning 3 different STFT's: window coefficients only
+    \item learning 3 different STFT's: DFT's kernel coefficients
+    \item learning 3 different STFT's: both DFT's kernel coefficients and window coefficients
+\end{enumerate}
+
+Here are our results:
+
+<img src="images/train_loss.png" height="200">
+
+<img src="images/val_accuracy_graph.png" height="200">
+
+<img src="images/val_accuracy_matrix.png" height="200">
+
+As we can see, out of the following 3 combinations:
+1. learning the STFT window coefficients
+2. learning the STFT DFT kernel coefficients
+3. learning both the DFT kernel coefficients and window coefficients
+It's appears that learning both the DFT kernel coefficients and window coefficients together has the best performance.
+However, it's seems that learning 3 different STFT modules (one for each of Resnet's input channels), rather then learning 1 STFT module, does not improve the performance; it performs slightly better or slightly worse, depending on the trial combination.
+
 
 
 
