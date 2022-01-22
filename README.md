@@ -53,13 +53,13 @@ With those parameters, we conducted the folowing trials:
 
 Here are our results:
 
-<img src="images/train_loss.png">
+<img src="images/train_loss.png"  height="250">
 <p style="text-align: center;">Train loss progress</p>
 
-<img src="images/val_accuracy_graph.png">
+<img src="images/val_accuracy_graph.png"  height="200">
 <p style="text-align: center;">Validation accuracy progress</p>
 
-<img src="images/val_accuracy_matrix.png">
+<img src="images/val_accuracy_matrix.png"  height="300">
 <p style="text-align: center;">Validation confusion matrices</p>
 
 
