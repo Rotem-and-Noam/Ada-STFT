@@ -43,33 +43,32 @@ You can use our code `codes\train_optuna.py` and change it if you would like to 
 
 With those parameters, we conducted the folowing trials:
 
-\begin{enumerate}
-    \item basic run, with no STFT learning
-    \item learning the STFT's window coefficients
-    \item learning the STFT's DFT's kernel coefficients
-    \item learning both the DFT's kernel coefficients and window coefficients
-    \item learning 3 different STFT's: window coefficients only
-    \item learning 3 different STFT's: DFT's kernel coefficients
-    \item learning 3 different STFT's: both DFT's kernel coefficients and window coefficients
-\end{enumerate}
+* basic run, with no STFT learning
+* learning the STFT's window coefficients
+* learning the STFT's DFT's kernel coefficients
+* learning both the DFT's kernel coefficients and window coefficients
+* learning 3 different STFT's: window coefficients only
+* learning 3 different STFT's: DFT's kernel coefficients
+* learning 3 different STFT's: both DFT's kernel coefficients and window coefficients
 
 Here are our results:
 
 <img src="images/train_loss.png">
+<p style="text-align: center;">Train loss progress</p>
 
 <img src="images/val_accuracy_graph.png">
+<p style="text-align: center;">Validation accuracy progress</p>
 
 <img src="images/val_accuracy_matrix.png">
+<p style="text-align: center;">Validation confusion matrices</p>
+
 
 As we can see, out of the following 3 combinations:
 1. learning the STFT window coefficients
 2. learning the STFT DFT kernel coefficients
 3. learning both the DFT kernel coefficients and window coefficients
-It's appears that learning both the DFT kernel coefficients and window coefficients together has the best performance.
-However, it's seems that learning 3 different STFT modules (one for each of Resnet's input channels), rather then learning 1 STFT module, does not improve the performance; it performs slightly better or slightly worse, depending on the trial combination.
-
-
-
+It appears that learning both the DFT kernel coefficients and window coefficients together has the best performance.
+Surprisingly, it seems that learning 3 different STFT modules (one for each of Resnet's input channels), rather then learning 1 STFT module, does not improve the performance; it performs slightly better or slightly worse, depending on the trial combination.
 
 # Run our model
 
@@ -88,7 +87,7 @@ To train our classifier network, run `train_env.py`.
 ```cmd
 python ./train_env.py --test_name run_basic
 ```
-training job parameters are automatically loaded from the options.json in the project directory.
+Training job parameters are automatically loaded from the options.json in the project directory.
 Changes to the parameters can be applied by changing the `codes\options.json` or running with command line arguments, for example:
 ```cmd
 python ./train_env.py --test_name run_learn_window --learn_window 1
