@@ -1,4 +1,4 @@
-<center> <h1>Adaptive STFT: Classify Music Genres with a learnable spectrogram layer</h1> </center>
+<div style="text-align: center;"> <h1>Adaptive STFT: Classify Music Genres with a learnable spectrogram layer</h1> </div>
 <h2 align="center">
   <br>
  Our final project for the Technion's EE Deep Learning course (046211)
