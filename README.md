@@ -13,9 +13,9 @@
 
 ## Agenda
 - [Ada-STFT](#Ada-STFT) - about our project
-- [Training and Results](#Training and Results) - our results
+- [<Training and Results>](#<Training and Results>) - our results
 - [Hyper-parameters](#Hyper-parameters) - what are our training's hyperparameters
-- [Run our model](#Run our model) - how to run training jobs and inference with our model and how to load checkpoints
+- [<Run our model>](#<Run our model>) - how to run training jobs and inference with our model and how to load checkpoints
 - [Ada-STFT Module](#Ada-STFT Module) - how to use our STFT layer
 - [Prerequisites](#Prerequisites) - Prerequisites of the environment
 
